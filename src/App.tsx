@@ -22,6 +22,8 @@ const SHORT_MOMENTUM_MAGNITUDE = 0.01; // +/- 1% bias
 const LONG_MOMENTUM_WAVE_PERIOD = 600; // 10 minute cycle
 const LONG_MOMENTUM_MAGNITUDE = 0.005; // +/- 0.5% bias
 
+let intervalId: number|undefined = undefined;
+
 function App() {
   const [showAnimation, setShowAnimation] = useState(true);
   const [wallet, setWallet] = useState<WalletState>({ $HIT: 0.0069, FauxUSD: 420 });
@@ -44,11 +46,24 @@ function App() {
     setShowAnimation(false);
   };
 
+  /*
+  const debugPriceTo3000 = () => {
+    setCurrentPrice(prevCurrentPrice => {
+      setPreviousPrice(prevCurrentPrice);
+      setPriceHistory(prevHistory => {
+        const updatedHistory = [...prevHistory, 3000];
+        return updatedHistory.slice(-PRICE_HISTORY_LENGTH);
+      });
+      return 3000;
+    });
+  };
+  */
+
   // Periodically update the price (once the animation is done).
   useEffect(() => {
     if (showAnimation) return;
 
-    const intervalId = setInterval(() => {
+    intervalId = setInterval(() => {
       const nowSeconds = Date.now() / 1000;
       setCurrentPrice(prevCurrentPrice => {
         setPreviousPrice(prevCurrentPrice);
@@ -75,6 +90,10 @@ function App() {
 
     return () => clearInterval(intervalId);
   }, [showAnimation, volatility]);
+
+  // const stopSimulation = () => {
+  //   clearInterval(intervalId);
+  // };
 
   const handleSwap = useCallback((fromCurrency: Currency, toCurrency: Currency, amount: number) => {
     setWallet(prevWallet => {
@@ -148,6 +167,11 @@ function App() {
             onStake={handleStake}
           />
         </div>
+
+        {/* <div className="space-y-6">
+          <button onClick={debugPriceTo3000}>Debug: set price to 3000</button>
+          <button onClick={stopSimulation}>Stop simulation</button>
+        </div> */}
       </main>
 
       <footer className="text-center mt-12 text-gray-500 text-sm">

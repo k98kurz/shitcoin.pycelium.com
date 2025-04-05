@@ -69,7 +69,7 @@ export const generateSvgPath = (
   if (totalPoints < 2) return '';
 
   const dataRange = dataMax - dataMin === 0 ? 1 : dataMax - dataMin; // Avoid division by zero
-  const padding = dataRange * 0.05; // 5% padding
+  const padding = 10; // 10px padding
   const effectiveHeight = height - 2 * padding;
   const effectiveMin = dataMin - padding;
   const effectiveRange = dataRange + 2 * padding;
