@@ -136,10 +136,13 @@ const SwapUI: React.FC<SwapUIProps> = ({
   };
 
   // --- New staking functionality ---
-
   const handleStakeCoins = () => {
     // Do nothing if a stake is already in progress.
     if (stakeLockRemaining > 0) return;
+
+    // Clear the amount fields when staking starts
+    setFromAmount('');
+    setToAmount('');
 
     const roll = Math.random();
     if (roll < 0.1) {
@@ -238,6 +241,7 @@ const SwapUI: React.FC<SwapUIProps> = ({
             placeholder="0.00"
             min="0"
             step="any"
+            disabled={stakeLockRemaining > 0}
             className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
           />
           <p className="text-xs text-gray-500 mt-1">
@@ -246,7 +250,7 @@ const SwapUI: React.FC<SwapUIProps> = ({
               onClick={handleMaxClick}
               className="text-indigo-600 hover:text-indigo-800 focus:outline-none underline disabled:text-gray-400 disabled:no-underline disabled:cursor-not-allowed"
               title={`Use max ${fromCurrency} balance`}
-              disabled={(fromCurrency === '$HIT' ? $hitBalance : fauxUSDBalance) <= 1e-9}
+              disabled={(fromCurrency === '$HIT' ? $hitBalance : fauxUSDBalance) <= 1e-9 || stakeLockRemaining > 0}
             >
               {(fromCurrency === '$HIT' ? $hitBalance : fauxUSDBalance).toFixed(fromCurrency === '$HIT' ? 4 : 2)}
             </button>
@@ -255,7 +259,7 @@ const SwapUI: React.FC<SwapUIProps> = ({
               onClick={() => handleAmountClick(0.5)}
               className="text-indigo-600 hover:text-indigo-800 focus:outline-none underline disabled:text-gray-400 disabled:no-underline disabled:cursor-not-allowed"
               title="Use 50% of balance"
-              disabled={(fromCurrency === '$HIT' ? $hitBalance : fauxUSDBalance) <= 1e-9}
+              disabled={(fromCurrency === '$HIT' ? $hitBalance : fauxUSDBalance) <= 1e-9 || stakeLockRemaining > 0}
             >
               50%
             </button>
@@ -264,7 +268,7 @@ const SwapUI: React.FC<SwapUIProps> = ({
               onClick={() => handleAmountClick(0.25)}
               className="text-indigo-600 hover:text-indigo-800 focus:outline-none underline disabled:text-gray-400 disabled:no-underline disabled:cursor-not-allowed"
               title="Use 25% of balance"
-              disabled={(fromCurrency === '$HIT' ? $hitBalance : fauxUSDBalance) <= 1e-9}
+              disabled={(fromCurrency === '$HIT' ? $hitBalance : fauxUSDBalance) <= 1e-9 || stakeLockRemaining > 0}
             >
               25%
             </button>
@@ -296,6 +300,7 @@ const SwapUI: React.FC<SwapUIProps> = ({
             placeholder="0.00"
             min="0"
             step="any"
+            disabled={stakeLockRemaining > 0}
             className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
           />
           <p className="text-xs text-gray-500 mt-1">
