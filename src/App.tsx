@@ -17,8 +17,10 @@ interface WalletState {
 const INITIAL_PRICE = 420.69;
 const PRICE_HISTORY_LENGTH = 200;
 const PRICE_UPDATE_INTERVAL = 500; // ms (0.5 seconds)
-const SINE_WAVE_PERIOD_SECONDS = 60; // 1 minute cycle
-const SINE_BIAS_MAGNITUDE = 0.01; // +/- 1% bias
+const SHORT_MOMENTUM_WAVE_PERIOD = 60; // 1 minute cycle
+const SHORT_MOMENTUM_MAGNITUDE = 0.01; // +/- 1% bias
+const LONG_MOMENTUM_WAVE_PERIOD = 600; // 10 minute cycle
+const LONG_MOMENTUM_MAGNITUDE = 0.005; // +/- 0.5% bias
 
 function App() {
   const [showAnimation, setShowAnimation] = useState(true);
@@ -56,10 +58,11 @@ function App() {
         setVolatility(vol);
 
         const randomChange = ((Math.random() - 0.5) * vol) * prevCurrentPrice;
-        const angularFrequency = (2 * Math.PI) / SINE_WAVE_PERIOD_SECONDS;
-        const sineValue = Math.sin(nowSeconds * angularFrequency);
-        const sineBias = sineValue * SINE_BIAS_MAGNITUDE * prevCurrentPrice;
-        const totalChange = randomChange + sineBias;
+        const shortMomentum = Math.sin(nowSeconds * (2 * Math.PI) / SHORT_MOMENTUM_WAVE_PERIOD);
+        const shortMomentumBias = shortMomentum * SHORT_MOMENTUM_MAGNITUDE * prevCurrentPrice;
+        const longMomentum = Math.sin(nowSeconds * (2 * Math.PI) / LONG_MOMENTUM_WAVE_PERIOD);
+        const longMomentumBias = longMomentum * LONG_MOMENTUM_MAGNITUDE * prevCurrentPrice;
+        const totalChange = randomChange + shortMomentumBias + longMomentumBias;
         const newPrice = Math.max(0.01, prevCurrentPrice + totalChange);
 
         setPriceHistory(prevHistory => {
