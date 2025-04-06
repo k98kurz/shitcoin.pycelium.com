@@ -4,9 +4,9 @@
 
 @keyframes cycleColors {
     0%   { color: #339; }
-    100%  { color: #f50; }
+    100%  { color: #f61; }
   }
 
   .animate-cycle {
-    animation: cycleColors 2s infinite;
+    animation: cycleColors 1s infinite;
   }
