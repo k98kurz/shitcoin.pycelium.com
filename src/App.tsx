@@ -177,6 +177,7 @@ function App() {
             currentPrice={currentPrice}
             onSwap={handleSwap}
             onStake={handleStake}
+            priceHistory={priceHistory}
           />
         </div>
 

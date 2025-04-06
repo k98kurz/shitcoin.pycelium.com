@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ArrowRightLeft } from 'lucide-react';
+import { calculateSMA } from '../utils/chartUtils';
 
 type Currency = '$HIT' | 'FauxUSD';
 
@@ -9,6 +10,7 @@ interface SwapUIProps {
   currentPrice: number; // Price of 1 HIT in FauxUSD
   onSwap: (fromCurrency: Currency, toCurrency: Currency, amount: number) => void;
   onStake: (multiplier: number) => void; // New onStake callback for staking bonus/penalty
+  priceHistory: number[];
 }
 
 interface StakeOutcome {
@@ -24,6 +26,7 @@ const SwapUI: React.FC<SwapUIProps> = ({
   currentPrice,
   onSwap,
   onStake,
+  priceHistory,
 }) => {
   const [fromCurrency, setFromCurrency] = useState<Currency>('FauxUSD');
   const [toCurrency, setToCurrency] = useState<Currency>('$HIT');
@@ -31,10 +34,14 @@ const SwapUI: React.FC<SwapUIProps> = ({
   const [toAmount, setToAmount] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
 
-  // --- New staking-related state ---
+  // --- Staking-related state ---
   const [stakeLockRemaining, setStakeLockRemaining] = useState<number>(0);
   const [stakeOutcome, setStakeOutcome] = useState<StakeOutcome | null>(null);
   const [stakeError, setStakeError] = useState<string | null>(null);
+
+  // --- Auto toggle states ---
+  const [autoStakeEnabled, setAutoStakeEnabled] = useState<boolean>(false);
+  const [autoSwapEnabled, setAutoSwapEnabled] = useState<boolean>(false);
 
   const handleAmountChange = (value: string, type: 'from' | 'to') => {
     const numericValue = parseFloat(value);
@@ -120,7 +127,7 @@ const SwapUI: React.FC<SwapUIProps> = ({
       setToAmount('');
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentPrice, fromCurrency, toCurrency]); // Keep fromAmount out to avoid loops, handleAmountChange covers it
+  }, [currentPrice, fromCurrency, toCurrency]);
 
   const handleMaxClick = () => {
     const balance = fromCurrency === '$HIT' ? $hitBalance : fauxUSDBalance;
@@ -208,6 +215,90 @@ const SwapUI: React.FC<SwapUIProps> = ({
       setStakeOutcome(null);
     }
   }, [stakeLockRemaining, stakeOutcome, onStake]);
+
+  // --- Refs to hold latest state/props for auto actions ---
+  const autoStakeEnabledRef = useRef(autoStakeEnabled);
+  useEffect(() => {
+    autoStakeEnabledRef.current = autoStakeEnabled;
+  }, [autoStakeEnabled]);
+
+  const autoSwapEnabledRef = useRef(autoSwapEnabled);
+  useEffect(() => {
+    autoSwapEnabledRef.current = autoSwapEnabled;
+  }, [autoSwapEnabled]);
+
+  const stakeLockRemainingRef = useRef(stakeLockRemaining);
+  useEffect(() => {
+    stakeLockRemainingRef.current = stakeLockRemaining;
+  }, [stakeLockRemaining]);
+
+  const currentPriceRef = useRef(currentPrice);
+  useEffect(() => {
+    currentPriceRef.current = currentPrice;
+  }, [currentPrice]);
+
+  const fauxUSDBalanceRef = useRef(fauxUSDBalance);
+  useEffect(() => {
+    fauxUSDBalanceRef.current = fauxUSDBalance;
+  }, [fauxUSDBalance]);
+
+  const $hitBalanceRef = useRef($hitBalance);
+  useEffect(() => {
+    $hitBalanceRef.current = $hitBalance;
+  }, [$hitBalance]);
+
+  const priceHistoryRef = useRef(priceHistory);
+  useEffect(() => {
+    priceHistoryRef.current = priceHistory;
+  }, [priceHistory]);
+
+  // Store onSwap in a ref (in case it changes)
+  const onSwapRef = useRef(onSwap);
+  useEffect(() => {
+    onSwapRef.current = onSwap;
+  }, [onSwap]);
+
+  // Store handleStakeCoins in a ref
+  const handleStakeCoinsRef = useRef(handleStakeCoins);
+  useEffect(() => {
+    handleStakeCoinsRef.current = handleStakeCoins;
+  }, [handleStakeCoins]);
+
+  // --- AutoStake interval (runs every 7 seconds) ---
+  useEffect(() => {
+    const autoStakeInterval = setInterval(() => {
+      if (!autoStakeEnabledRef.current) return;
+      if (stakeLockRemainingRef.current !== 0) return;
+      // Call the current stake function and clear any stake error
+      handleStakeCoinsRef.current();
+      setStakeError(null);
+    }, 7000);
+    return () => clearInterval(autoStakeInterval);
+  }, []);
+
+  // --- AutoSwap interval (runs every second) ---
+  useEffect(() => {
+    const autoSwapInterval = setInterval(() => {
+      if (!autoSwapEnabledRef.current) return;
+      if (stakeLockRemainingRef.current > 0) return; // Do nothing if coins are staked
+
+      const smaArray = calculateSMA(priceHistoryRef.current, 20);
+      const lastSma = smaArray[smaArray.length - 1];
+      if (lastSma === null) return; // Not enough data
+      if (currentPriceRef.current > lastSma) {
+        const amount = fauxUSDBalanceRef.current * 0.1;
+        if (amount > 0) {
+          onSwapRef.current('FauxUSD', '$HIT', amount);
+        }
+      } else if (currentPriceRef.current < lastSma) {
+        const amount = $hitBalanceRef.current * 0.1;
+        if (amount > 0) {
+          onSwapRef.current('$HIT', 'FauxUSD', amount);
+        }
+      }
+    }, 1000);
+    return () => clearInterval(autoSwapInterval);
+  }, []);
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-md relative">
@@ -335,6 +426,25 @@ const SwapUI: React.FC<SwapUIProps> = ({
           >
             Stake Coins
           </button>
+          {/* Auto stake and auto swap checkboxes */}
+          <div className="flex flex-row items-center space-x-2">
+            <input
+              type="checkbox"
+              id="autoStake"
+              className="form-checkbox h-5 w-5 text-indigo-600"
+              checked={autoStakeEnabled}
+              onChange={(e) => setAutoStakeEnabled(e.target.checked)}
+            />
+            <label htmlFor="autoStake" className="text-sm text-gray-700">Auto stake</label>
+            <input
+              type="checkbox"
+              id="autoSwap"
+              className="form-checkbox h-5 w-5 text-indigo-600"
+              checked={autoSwapEnabled}
+              onChange={(e) => setAutoSwapEnabled(e.target.checked)}
+            />
+            <label htmlFor="autoSwap" className="text-sm text-gray-700">Auto swap</label>
+          </div>
           {/* Display the staking lock remaining message and expected rewards */}
           {stakeLockRemaining > 0 && stakeOutcome && (
             <div>
