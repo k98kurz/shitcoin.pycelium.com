@@ -1,12 +1,19 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Wallet as WalletIcon } from 'lucide-react'; // Renamed to avoid conflict
 
 interface WalletProps {
   $hitBalance: number;
   fAuxUSDBalance: number;
+  currentPrice: number;
 }
 
-const Wallet: React.FC<WalletProps> = ({ $hitBalance, fAuxUSDBalance }) => {
+const Wallet: React.FC<WalletProps> = ({ $hitBalance, fAuxUSDBalance, currentPrice }) => {
+  // Recalculate total in fAuxUSD whenever any of the dependencies change.
+  // This converts all $HIT to fAuxUSD (by dividing by currentPrice) and adds the fAuxUSDBalance.
+  const score = useMemo(() => {
+    return (fAuxUSDBalance + ($hitBalance * currentPrice)) / Math.PI;
+  }, [$hitBalance, fAuxUSDBalance, currentPrice]);
+
   return (
     <div className="bg-white p-6 rounded-lg shadow-md">
       <h2 className="text-xl font-semibold mb-4 flex items-center text-gray-700">
@@ -20,6 +27,10 @@ const Wallet: React.FC<WalletProps> = ({ $hitBalance, fAuxUSDBalance }) => {
         <div className="flex justify-between items-center">
           <span className="font-medium text-gray-600">fAuxUSD:</span>
           <span className="text-lg font-bold text-green-700">{fAuxUSDBalance.toFixed(2)}</span>
+        </div>
+        <div className="flex justify-between items-center">
+          <span className="font-medium text-gray-600">Pi Score:</span>
+          <span className="text-lg font-bold text-indigo-700">{score.toFixed(3)}</span>
         </div>
       </div>
     </div>

@@ -170,7 +170,11 @@ function App() {
         </div>
 
         <div className="space-y-6">
-          <Wallet $hitBalance={wallet.$HIT} fAuxUSDBalance={wallet.fAuxUSD} />
+          <Wallet
+            $hitBalance={wallet.$HIT}
+            fAuxUSDBalance={wallet.fAuxUSD}
+            currentPrice={currentPrice}
+          />
           <SwapUI
             $hitBalance={wallet.$HIT}
             fAuxUSDBalance={wallet.fAuxUSD}
