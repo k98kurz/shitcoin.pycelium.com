@@ -367,118 +367,118 @@ const SwapUI: React.FC<SwapUIProps> = ({
         )}
 
         {!autoSwapEnabled &&
-        <>
-        {/* From Currency Input */}
-        <div>
-          <label htmlFor="fromAmount" className="block text-sm font-medium text-gray-500 mb-1">
-            Spend ({fromCurrency})
-          </label>
-          <input
-            type="number"
-            id="fromAmount"
-            value={fromAmount}
-            onChange={(e) => handleAmountChange(e.target.value, 'from')}
-            placeholder="0.00"
-            min="0"
-            step="any"
-            disabled={stakeLockRemaining > 0}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-          />
-          <p className="text-xs text-gray-500 mt-1">
-            Balance:{' '}
-            <button
-              onClick={handleMaxClick}
-              className="text-indigo-600 hover:text-indigo-800 focus:outline-none underline disabled:text-gray-400 disabled:no-underline disabled:cursor-not-allowed"
-              title={`Use max ${fromCurrency} balance`}
-              disabled={(fromCurrency === '$HIT' ? $hitBalance : fAuxUSDBalance) <= 1e-9 || stakeLockRemaining > 0}
-            >
-              {(fromCurrency === '$HIT' ? $hitBalance : fAuxUSDBalance).toFixed(fromCurrency === '$HIT' ? 4 : 2)}
-            </button>
-            &nbsp;&nbsp;&nbsp;(
-            <button
-              onClick={() => handleAmountClick(0.5)}
-              className="text-indigo-600 hover:text-indigo-800 focus:outline-none underline disabled:text-gray-400 disabled:no-underline disabled:cursor-not-allowed"
-              title="Use 50% of balance"
-              disabled={(fromCurrency === '$HIT' ? $hitBalance : fAuxUSDBalance) <= 1e-9 || stakeLockRemaining > 0}
-            >
-              50%
-            </button>
-            )&nbsp;&nbsp;&nbsp;(
-            <button
-              onClick={() => handleAmountClick(0.25)}
-              className="text-indigo-600 hover:text-indigo-800 focus:outline-none underline disabled:text-gray-400 disabled:no-underline disabled:cursor-not-allowed"
-              title="Use 25% of balance"
-              disabled={(fromCurrency === '$HIT' ? $hitBalance : fAuxUSDBalance) <= 1e-9 || stakeLockRemaining > 0}
-            >
-              25%
-            </button>
-            )
-          </p>
-        </div>
+          <>
+            {/* From Currency Input */}
+            <div>
+              <label htmlFor="fromAmount" className="block text-sm font-medium text-gray-500 mb-1">
+                Spend ({fromCurrency})
+              </label>
+              <input
+                type="number"
+                id="fromAmount"
+                value={fromAmount}
+                onChange={(e) => handleAmountChange(e.target.value, 'from')}
+                placeholder="0.00"
+                min="0"
+                step="any"
+                disabled={stakeLockRemaining > 0}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Balance:{' '}
+                <button
+                  onClick={handleMaxClick}
+                  className="text-indigo-600 hover:text-indigo-800 focus:outline-none underline disabled:text-gray-400 disabled:no-underline disabled:cursor-not-allowed"
+                  title={`Use max ${fromCurrency} balance`}
+                  disabled={(fromCurrency === '$HIT' ? $hitBalance : fAuxUSDBalance) <= 1e-9 || stakeLockRemaining > 0}
+                >
+                  {(fromCurrency === '$HIT' ? $hitBalance : fAuxUSDBalance).toFixed(fromCurrency === '$HIT' ? 4 : 2)}
+                </button>
+                &nbsp;&nbsp;&nbsp;(
+                <button
+                  onClick={() => handleAmountClick(0.5)}
+                  className="text-indigo-600 hover:text-indigo-800 focus:outline-none underline disabled:text-gray-400 disabled:no-underline disabled:cursor-not-allowed"
+                  title="Use 50% of balance"
+                  disabled={(fromCurrency === '$HIT' ? $hitBalance : fAuxUSDBalance) <= 1e-9 || stakeLockRemaining > 0}
+                >
+                  50%
+                </button>
+                )&nbsp;&nbsp;&nbsp;(
+                <button
+                  onClick={() => handleAmountClick(0.25)}
+                  className="text-indigo-600 hover:text-indigo-800 focus:outline-none underline disabled:text-gray-400 disabled:no-underline disabled:cursor-not-allowed"
+                  title="Use 25% of balance"
+                  disabled={(fromCurrency === '$HIT' ? $hitBalance : fAuxUSDBalance) <= 1e-9 || stakeLockRemaining > 0}
+                >
+                  25%
+                </button>
+                )
+              </p>
+            </div>
 
-        {/* Switch Button */}
-        <div className="flex justify-center">
-          <button
-            onClick={switchCurrencies}
-            className="p-2 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 transition-colors"
-            aria-label="Switch currencies"
-          >
-            <ArrowRightLeft className="h-5 w-5" />
-          </button>
-        </div>
+            {/* Switch Button */}
+            <div className="flex justify-center">
+              <button
+                onClick={switchCurrencies}
+                className="p-2 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 transition-colors"
+                aria-label="Switch currencies"
+              >
+                <ArrowRightLeft className="h-5 w-5" />
+              </button>
+            </div>
 
-        {/* To Currency Input */}
-        <div>
-          <label htmlFor="toAmount" className="block text-sm font-medium text-gray-500 mb-1">
-            Receive ({toCurrency})
-          </label>
-          <input
-            type="number"
-            id="toAmount"
-            value={toAmount}
-            onChange={(e) => handleAmountChange(e.target.value, 'to')}
-            placeholder="0.00"
-            min="0"
-            step="any"
-            disabled={stakeLockRemaining > 0}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-          />
-          <p className="text-xs text-gray-500 mt-1">
-            Balance: {(toCurrency === '$HIT' ? $hitBalance : fAuxUSDBalance).toFixed(toCurrency === '$HIT' ? 4 : 2)}
-          </p>
-        </div>
-        <div className="flex flex-col items-center space-y-2">
-          {/* Swap Button: also disabled when a stake is in progress */}
-          <button
-            onClick={handleSwap}
-            disabled={
-              !fromAmount ||
-              isNaN(parseFloat(fromAmount)) ||
-              parseFloat(fromAmount) <= 0 ||
-              !toAmount ||
-              isNaN(parseFloat(toAmount)) ||
-              parseFloat(toAmount) <= 0 ||
-              !!error ||
-              stakeLockRemaining > 0
-            }
-            className="w-full bg-indigo-600 text-white py-2 px-4 rounded-md font-semibold hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            Swap
-          </button>
-        </div>
-        </>
+            {/* To Currency Input */}
+            <div>
+              <label htmlFor="toAmount" className="block text-sm font-medium text-gray-500 mb-1">
+                Receive ({toCurrency})
+              </label>
+              <input
+                type="number"
+                id="toAmount"
+                value={toAmount}
+                onChange={(e) => handleAmountChange(e.target.value, 'to')}
+                placeholder="0.00"
+                min="0"
+                step="any"
+                disabled={stakeLockRemaining > 0}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Balance: {(toCurrency === '$HIT' ? $hitBalance : fAuxUSDBalance).toFixed(toCurrency === '$HIT' ? 4 : 2)}
+              </p>
+            </div>
+            <div className="flex flex-col items-center space-y-2">
+              {/* Swap Button: also disabled when a stake is in progress */}
+              <button
+                onClick={handleSwap}
+                disabled={
+                  !fromAmount ||
+                  isNaN(parseFloat(fromAmount)) ||
+                  parseFloat(fromAmount) <= 0 ||
+                  !toAmount ||
+                  isNaN(parseFloat(toAmount)) ||
+                  parseFloat(toAmount) <= 0 ||
+                  !!error ||
+                  stakeLockRemaining > 0
+                }
+                className="w-full bg-indigo-600 text-white py-2 px-4 rounded-md font-semibold hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                Swap
+              </button>
+            </div>
+          </>
         }
 
         <div className="flex flex-col items-center space-y-2">
           {/* Stake Coins Button */}
           {!autoStakeEnabled &&
-          <button
-            onClick={handleStakeCoins}
-            disabled={stakeLockRemaining > 0}
-            className="w-full bg-green-600 text-white py-2 px-4 rounded-md font-semibold hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            Stake Coins
-          </button>
+            <button
+              onClick={handleStakeCoins}
+              disabled={stakeLockRemaining > 0}
+              className="w-full bg-green-600 text-white py-2 px-4 rounded-md font-semibold hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              Stake Coins
+            </button>
           }
           {/* Display the staking lock remaining message and expected rewards */}
           {stakeLockRemaining > 0 && stakeOutcome && (
