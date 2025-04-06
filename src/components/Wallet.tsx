@@ -8,10 +8,8 @@ interface WalletProps {
 }
 
 const Wallet: React.FC<WalletProps> = ({ $hitBalance, fAuxUSDBalance, currentPrice }) => {
-  // Recalculate total in fAuxUSD whenever any of the dependencies change.
-  // This converts all $HIT to fAuxUSD (by dividing by currentPrice) and adds the fAuxUSDBalance.
   const score = useMemo(() => {
-    return (fAuxUSDBalance + ($hitBalance * currentPrice)) / Math.PI;
+    return Math.log((fAuxUSDBalance + ($hitBalance * currentPrice)) + 1) * Math.PI;
   }, [$hitBalance, fAuxUSDBalance, currentPrice]);
 
   return (
@@ -29,7 +27,7 @@ const Wallet: React.FC<WalletProps> = ({ $hitBalance, fAuxUSDBalance, currentPri
           <span className="text-lg font-bold text-green-700">{fAuxUSDBalance.toFixed(2)}</span>
         </div>
         <div className="flex justify-between items-center">
-          <span className="font-medium text-gray-600">Pi Score:</span>
+          <span className="font-medium text-gray-600">Score:</span>
           <span className="text-lg font-bold text-indigo-700">{score.toFixed(3)}</span>
         </div>
       </div>
