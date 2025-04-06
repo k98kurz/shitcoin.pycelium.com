@@ -195,6 +195,9 @@ function App() {
       <footer className="text-center mt-12 text-gray-500 text-sm">
         <p>Disclaimer: prices are made up.</p>
         <p>Exchange may collapse at our sole discretion.</p>
+        <a className="text-gray-200" target="_blank" href="https://github.com/k98kurz/shitcoin.pycelium.com">
+          Source Code
+        </a>
       </footer>
     </div>
   );
