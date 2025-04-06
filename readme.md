@@ -19,7 +19,8 @@ bash -c "cd dist/ && python -m http.server >/dev/null 2>&1" &
 
 Then open your browser and navigate to `http://localhost:8000`. This starts the
 Python http server as a background process, so you can rebuild the app and
-refresh your browser to test any changes.
+refresh your browser to test any changes. (To kill the server, type `fg` and
+then `Ctrl-C`.)
 
 ## Contributing
 
