@@ -3,10 +3,10 @@ import { Wallet as WalletIcon } from 'lucide-react'; // Renamed to avoid conflic
 
 interface WalletProps {
   $hitBalance: number;
-  fauxUSDBalance: number;
+  fAuxUSDBalance: number;
 }
 
-const Wallet: React.FC<WalletProps> = ({ $hitBalance, fauxUSDBalance }) => {
+const Wallet: React.FC<WalletProps> = ({ $hitBalance, fAuxUSDBalance }) => {
   return (
     <div className="bg-white p-6 rounded-lg shadow-md">
       <h2 className="text-xl font-semibold mb-4 flex items-center text-gray-700">
@@ -18,8 +18,8 @@ const Wallet: React.FC<WalletProps> = ({ $hitBalance, fauxUSDBalance }) => {
           <span className="text-lg font-bold text-indigo-700">{$hitBalance.toFixed(4)}</span>
         </div>
         <div className="flex justify-between items-center">
-          <span className="font-medium text-gray-600">FauxUSD:</span>
-          <span className="text-lg font-bold text-green-700">{fauxUSDBalance.toFixed(2)}</span>
+          <span className="font-medium text-gray-600">fAuxUSD:</span>
+          <span className="text-lg font-bold text-green-700">{fAuxUSDBalance.toFixed(2)}</span>
         </div>
       </div>
     </div>

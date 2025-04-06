@@ -12,7 +12,7 @@ const PriceDisplay: React.FC<PriceDisplayProps> = ({ price, previousPrice }) => 
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-md text-center">
-      <h2 className="text-xl font-semibold mb-2 text-gray-700">FauxUSD / $HIT</h2>
+      <h2 className="text-xl font-semibold mb-2 text-gray-700">fAuxUSD / $HIT</h2>
       <div className="flex items-center justify-center space-x-2">
          <p className={`text-4xl font-bold ${isUp ? 'text-green-600' : 'text-red-600'}`}>
            {price.toFixed(4)}

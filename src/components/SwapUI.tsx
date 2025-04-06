@@ -2,12 +2,12 @@ import React, { useState, useEffect, useRef } from 'react';
 import { ArrowRightLeft } from 'lucide-react';
 import { calculateSMA } from '../utils/chartUtils';
 
-type Currency = '$HIT' | 'FauxUSD';
+type Currency = '$HIT' | 'fAuxUSD';
 
 interface SwapUIProps {
   $hitBalance: number;
-  fauxUSDBalance: number;
-  currentPrice: number; // Price of 1 HIT in FauxUSD
+  fAuxUSDBalance: number;
+  currentPrice: number; // Price of 1 HIT in fAuxUSD
   onSwap: (fromCurrency: Currency, toCurrency: Currency, amount: number) => void;
   onStake: (multiplier: number) => void; // New onStake callback for staking bonus/penalty
   priceHistory: number[];
@@ -22,13 +22,13 @@ interface StakeOutcome {
 
 const SwapUI: React.FC<SwapUIProps> = ({
   $hitBalance,
-  fauxUSDBalance,
+  fAuxUSDBalance,
   currentPrice,
   onSwap,
   onStake,
   priceHistory,
 }) => {
-  const [fromCurrency, setFromCurrency] = useState<Currency>('FauxUSD');
+  const [fromCurrency, setFromCurrency] = useState<Currency>('fAuxUSD');
   const [toCurrency, setToCurrency] = useState<Currency>('$HIT');
   const [fromAmount, setFromAmount] = useState<string>('');
   const [toAmount, setToAmount] = useState<string>('');
@@ -67,21 +67,21 @@ const SwapUI: React.FC<SwapUIProps> = ({
 
     if (type === 'from') {
       setFromAmount(value);
-      if (fromCurrency === 'FauxUSD') {
-        // Buying $HIT with FauxUSD
+      if (fromCurrency === 'fAuxUSD') {
+        // Buying $HIT with fAuxUSD
         setToAmount((numericValue / currentPrice).toFixed(8));
       } else {
-        // Selling $HIT for FauxUSD
+        // Selling $HIT for fAuxUSD
         setToAmount((numericValue * currentPrice).toFixed(2));
       }
     } else {
       // type === 'to'
       setToAmount(value);
       if (toCurrency === '$HIT') {
-        // Buying $HIT with FauxUSD
+        // Buying $HIT with fAuxUSD
         setFromAmount((numericValue * currentPrice).toFixed(2));
       } else {
-        // Selling $HIT for FauxUSD
+        // Selling $HIT for fAuxUSD
         setFromAmount((numericValue / currentPrice).toFixed(8));
       }
     }
@@ -101,7 +101,7 @@ const SwapUI: React.FC<SwapUIProps> = ({
       return;
     }
 
-    const balance = fromCurrency === '$HIT' ? $hitBalance : fauxUSDBalance;
+    const balance = fromCurrency === '$HIT' ? $hitBalance : fAuxUSDBalance;
     if (amount > balance) {
       amount = balance;
     }
@@ -130,14 +130,14 @@ const SwapUI: React.FC<SwapUIProps> = ({
   }, [currentPrice, fromCurrency, toCurrency]);
 
   const handleMaxClick = () => {
-    const balance = fromCurrency === '$HIT' ? $hitBalance : fauxUSDBalance;
+    const balance = fromCurrency === '$HIT' ? $hitBalance : fAuxUSDBalance;
     const precision = fromCurrency === '$HIT' ? 8 : 2;
     const formattedBalance = balance.toFixed(precision);
     handleAmountChange(formattedBalance, 'from');
   };
 
   const handleAmountClick = (percentage: number) => {
-    const balance = fromCurrency === '$HIT' ? $hitBalance : fauxUSDBalance;
+    const balance = fromCurrency === '$HIT' ? $hitBalance : fAuxUSDBalance;
     const amount = balance * percentage;
     handleAmountChange(amount.toFixed(fromCurrency === '$HIT' ? 8 : 2), 'from');
   };
@@ -237,10 +237,10 @@ const SwapUI: React.FC<SwapUIProps> = ({
     currentPriceRef.current = currentPrice;
   }, [currentPrice]);
 
-  const fauxUSDBalanceRef = useRef(fauxUSDBalance);
+  const fAuxUSDBalanceRef = useRef(fAuxUSDBalance);
   useEffect(() => {
-    fauxUSDBalanceRef.current = fauxUSDBalance;
-  }, [fauxUSDBalance]);
+    fAuxUSDBalanceRef.current = fAuxUSDBalance;
+  }, [fAuxUSDBalance]);
 
   const $hitBalanceRef = useRef($hitBalance);
   useEffect(() => {
@@ -286,14 +286,14 @@ const SwapUI: React.FC<SwapUIProps> = ({
       const lastSma = smaArray[smaArray.length - 1];
       if (lastSma === null) return; // Not enough data
       if (currentPriceRef.current > lastSma) {
-        const amount = fauxUSDBalanceRef.current * 0.1;
+        const amount = fAuxUSDBalanceRef.current * 0.1;
         if (amount > 0) {
-          onSwapRef.current('FauxUSD', '$HIT', amount);
+          onSwapRef.current('fAuxUSD', '$HIT', amount);
         }
       } else if (currentPriceRef.current < lastSma) {
         const amount = $hitBalanceRef.current * 0.1;
         if (amount > 0) {
-          onSwapRef.current('$HIT', 'FauxUSD', amount);
+          onSwapRef.current('$HIT', 'fAuxUSD', amount);
         }
       }
     }, 1000);
@@ -341,16 +341,16 @@ const SwapUI: React.FC<SwapUIProps> = ({
               onClick={handleMaxClick}
               className="text-indigo-600 hover:text-indigo-800 focus:outline-none underline disabled:text-gray-400 disabled:no-underline disabled:cursor-not-allowed"
               title={`Use max ${fromCurrency} balance`}
-              disabled={(fromCurrency === '$HIT' ? $hitBalance : fauxUSDBalance) <= 1e-9 || stakeLockRemaining > 0}
+              disabled={(fromCurrency === '$HIT' ? $hitBalance : fAuxUSDBalance) <= 1e-9 || stakeLockRemaining > 0}
             >
-              {(fromCurrency === '$HIT' ? $hitBalance : fauxUSDBalance).toFixed(fromCurrency === '$HIT' ? 4 : 2)}
+              {(fromCurrency === '$HIT' ? $hitBalance : fAuxUSDBalance).toFixed(fromCurrency === '$HIT' ? 4 : 2)}
             </button>
             &nbsp;&nbsp;&nbsp;(
             <button
               onClick={() => handleAmountClick(0.5)}
               className="text-indigo-600 hover:text-indigo-800 focus:outline-none underline disabled:text-gray-400 disabled:no-underline disabled:cursor-not-allowed"
               title="Use 50% of balance"
-              disabled={(fromCurrency === '$HIT' ? $hitBalance : fauxUSDBalance) <= 1e-9 || stakeLockRemaining > 0}
+              disabled={(fromCurrency === '$HIT' ? $hitBalance : fAuxUSDBalance) <= 1e-9 || stakeLockRemaining > 0}
             >
               50%
             </button>
@@ -359,7 +359,7 @@ const SwapUI: React.FC<SwapUIProps> = ({
               onClick={() => handleAmountClick(0.25)}
               className="text-indigo-600 hover:text-indigo-800 focus:outline-none underline disabled:text-gray-400 disabled:no-underline disabled:cursor-not-allowed"
               title="Use 25% of balance"
-              disabled={(fromCurrency === '$HIT' ? $hitBalance : fauxUSDBalance) <= 1e-9 || stakeLockRemaining > 0}
+              disabled={(fromCurrency === '$HIT' ? $hitBalance : fAuxUSDBalance) <= 1e-9 || stakeLockRemaining > 0}
             >
               25%
             </button>
@@ -395,7 +395,7 @@ const SwapUI: React.FC<SwapUIProps> = ({
             className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
           />
           <p className="text-xs text-gray-500 mt-1">
-            Balance: {(toCurrency === '$HIT' ? $hitBalance : fauxUSDBalance).toFixed(toCurrency === '$HIT' ? 4 : 2)}
+            Balance: {(toCurrency === '$HIT' ? $hitBalance : fAuxUSDBalance).toFixed(toCurrency === '$HIT' ? 4 : 2)}
           </p>
         </div>
 
