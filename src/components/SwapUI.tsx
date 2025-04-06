@@ -165,9 +165,9 @@ const SwapUI: React.FC<SwapUIProps> = ({
     } else {
       // Success outcome (95% chance) — pick one of three outcomes equally.
       const outcomes = [
-        { bonusMultiplier: 1.1, lockDuration: 10 },
-        { bonusMultiplier: 1.4, lockDuration: 30 },
-        { bonusMultiplier: 2.0, lockDuration: 60 }
+        { bonusMultiplier: 1.05, lockDuration: 10 },
+        { bonusMultiplier: 1.2, lockDuration: 30 },
+        { bonusMultiplier: 1.5, lockDuration: 60 }
       ];
       const chosen = outcomes[Math.floor(Math.random() * outcomes.length)];
       const outcome: StakeOutcome = {
@@ -342,7 +342,7 @@ const SwapUI: React.FC<SwapUIProps> = ({
                 Coins locked: {stakeLockRemaining} second{stakeLockRemaining === 1 ? '' : 's'} remaining
               </p>
               <p className="text-sm text-center text-gray-600">
-                Expected rewards: {stakeOutcome.isFailure ? '10%' : `${((stakeOutcome.bonusMultiplier - 1) * 100).toFixed(0)}%`}
+                Expected rewards: {stakeOutcome.isFailure ? '5%' : `${((stakeOutcome.bonusMultiplier - 1) * 100).toFixed(0)}%`}
               </p>
             </div>
           )}
