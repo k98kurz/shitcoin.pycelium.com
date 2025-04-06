@@ -71,8 +71,8 @@ export const generateSvgPath = (
   const dataRange = dataMax - dataMin === 0 ? 1 : dataMax - dataMin; // Avoid division by zero
   const padding = 10; // 10px padding
   const effectiveHeight = height - 2 * padding;
-  const effectiveMin = dataMin - padding;
-  const effectiveRange = dataRange + 2 * padding;
+  const effectiveMin = dataMin;
+  const effectiveRange = dataRange;
 
   let pathSegments: string[] = [];
   let currentSegmentPoints: string[] = [];

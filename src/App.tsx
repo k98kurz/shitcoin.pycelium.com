@@ -58,6 +58,18 @@ function App() {
     });
   };
   */
+  /*
+  const debugPriceTo3000th = () => {
+    setCurrentPrice(prevCurrentPrice => {
+      setPreviousPrice(prevCurrentPrice);
+      setPriceHistory(prevHistory => {
+        const updatedHistory = [...prevHistory, 1/3000];
+        return updatedHistory.slice(-PRICE_HISTORY_LENGTH);
+      });
+      return 1/3000;
+    });
+  };
+  */
 
   // Periodically update the price (once the animation is done).
   useEffect(() => {
@@ -170,6 +182,7 @@ function App() {
 
         {/* <div className="space-y-6">
           <button onClick={debugPriceTo3000}>Debug: set price to 3000</button>
+          <button onClick={debugPriceTo3000th}>Debug: set price to 1/3000</button>
           <button onClick={stopSimulation}>Stop simulation</button>
         </div> */}
       </main>
