@@ -484,7 +484,11 @@ const SwapUI: React.FC<SwapUIProps> = ({
           {stakeLockRemaining > 0 && stakeOutcome && (
             <div>
               <p className="text-sm text-center text-gray-600 mt-2">
-                Coins locked: {stakeLockRemaining} second{stakeLockRemaining === 1 ? '' : 's'} remaining
+                Coins locked:{" "}
+                <span className="animate-cycle font-bold">
+                  {stakeLockRemaining}
+                </span>{" "}
+                second{stakeLockRemaining === 1 ? '' : 's'} remaining
               </p>
               <p className="text-sm text-center text-gray-600">
                 Expected rewards: {stakeOutcome.isFailure ? '5%' : `${((stakeOutcome.bonusMultiplier - 1) * 100).toFixed(0)}%`}
