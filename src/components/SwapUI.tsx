@@ -42,6 +42,7 @@ const SwapUI: React.FC<SwapUIProps> = ({
   // --- Auto toggle states ---
   const [autoStakeEnabled, setAutoStakeEnabled] = useState<boolean>(false);
   const [autoSwapEnabled, setAutoSwapEnabled] = useState<boolean>(false);
+  const [autoSwapPercentage, setAutoSwapPercentage] = useState<number>(10);
 
   const handleAmountChange = (value: string, type: 'from' | 'to') => {
     const numericValue = parseFloat(value);
@@ -264,6 +265,12 @@ const SwapUI: React.FC<SwapUIProps> = ({
     handleStakeCoinsRef.current = handleStakeCoins;
   }, [handleStakeCoins]);
 
+  // New ref for auto swap percentage
+  const autoSwapPercentageRef = useRef(autoSwapPercentage);
+  useEffect(() => {
+    autoSwapPercentageRef.current = autoSwapPercentage;
+  }, [autoSwapPercentage]);
+
   // --- AutoStake interval (runs every 7 seconds) ---
   useEffect(() => {
     const autoStakeInterval = setInterval(() => {
@@ -285,13 +292,15 @@ const SwapUI: React.FC<SwapUIProps> = ({
       const smaArray = calculateSMA(priceHistoryRef.current, 20);
       const lastSma = smaArray[smaArray.length - 1];
       if (lastSma === null) return; // Not enough data
+      // Get the configured proportion from the slider (percentage converted to fraction)
+      const proportion = autoSwapPercentageRef.current / 100;
       if (currentPriceRef.current > lastSma) {
-        const amount = fAuxUSDBalanceRef.current * 0.1;
+        const amount = fAuxUSDBalanceRef.current * proportion;
         if (amount > 0) {
           onSwapRef.current('fAuxUSD', '$HIT', amount);
         }
       } else if (currentPriceRef.current < lastSma) {
-        const amount = $hitBalanceRef.current * 0.1;
+        const amount = $hitBalanceRef.current * proportion;
         if (amount > 0) {
           onSwapRef.current('$HIT', 'fAuxUSD', amount);
         }
@@ -445,6 +454,24 @@ const SwapUI: React.FC<SwapUIProps> = ({
             />
             <label htmlFor="autoSwap" className="text-sm text-gray-700">Auto swap</label>
           </div>
+          {/* Slider for autoSwap percentage (visible only when Auto swap is enabled) */}
+          {autoSwapEnabled && (
+            <div className="mt-2 w-full">
+              <label htmlFor="autoSwapPercentage" className="text-sm text-gray-700">
+                Auto swap percentage: {autoSwapPercentage}%
+              </label>
+              <input
+                type="range"
+                id="autoSwapPercentage"
+                min="0"
+                max="100"
+                step="1"
+                value={autoSwapPercentage}
+                onChange={(e) => setAutoSwapPercentage(Number(e.target.value))}
+                className="w-full"
+              />
+            </div>
+          )}
           {/* Display the staking lock remaining message and expected rewards */}
           {stakeLockRemaining > 0 && stakeOutcome && (
             <div>
