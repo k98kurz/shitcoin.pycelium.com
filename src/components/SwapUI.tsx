@@ -328,6 +328,46 @@ const SwapUI: React.FC<SwapUIProps> = ({
       <h2 className="text-xl font-semibold mb-4 text-gray-700">Swap or Stake Coins</h2>
       {error && <p className="text-red-500 text-sm mb-3">{error}</p>}
       <div className="space-y-4">
+        {/* Auto stake and auto swap checkboxes */}
+        <div className="flex flex-row items-center space-x-2">
+          <input
+            type="checkbox"
+            id="autoStake"
+            className="form-checkbox h-5 w-5 text-indigo-600"
+            checked={autoStakeEnabled}
+            onChange={(e) => setAutoStakeEnabled(e.target.checked)}
+          />
+          <label htmlFor="autoStake" className="text-sm text-gray-700">Auto stake</label>
+          <input
+            type="checkbox"
+            id="autoSwap"
+            className="form-checkbox h-5 w-5 text-indigo-600"
+            checked={autoSwapEnabled}
+            onChange={(e) => setAutoSwapEnabled(e.target.checked)}
+          />
+          <label htmlFor="autoSwap" className="text-sm text-gray-700">Auto swap</label>
+        </div>
+        {/* Slider for autoSwap percentage (visible only when Auto swap is enabled) */}
+        {autoSwapEnabled && (
+          <div className="mt-2 w-full">
+            <label htmlFor="autoSwapPercentage" className="text-sm text-gray-700">
+              Auto swap percentage: {autoSwapPercentage}%
+            </label>
+            <input
+              type="range"
+              id="autoSwapPercentage"
+              min="0"
+              max="100"
+              step="1"
+              value={autoSwapPercentage}
+              onChange={(e) => setAutoSwapPercentage(Number(e.target.value))}
+              className="w-full"
+            />
+          </div>
+        )}
+
+        {!autoSwapEnabled &&
+        <>
         {/* From Currency Input */}
         <div>
           <label htmlFor="fromAmount" className="block text-sm font-medium text-gray-500 mb-1">
@@ -407,8 +447,6 @@ const SwapUI: React.FC<SwapUIProps> = ({
             Balance: {(toCurrency === '$HIT' ? $hitBalance : fAuxUSDBalance).toFixed(toCurrency === '$HIT' ? 4 : 2)}
           </p>
         </div>
-
-        {/* Stake Coins and Swap Buttons */}
         <div className="flex flex-col items-center space-y-2">
           {/* Swap Button: also disabled when a stake is in progress */}
           <button
@@ -427,7 +465,13 @@ const SwapUI: React.FC<SwapUIProps> = ({
           >
             Swap
           </button>
+        </div>
+        </>
+        }
+
+        <div className="flex flex-col items-center space-y-2">
           {/* Stake Coins Button */}
+          {!autoStakeEnabled &&
           <button
             onClick={handleStakeCoins}
             disabled={stakeLockRemaining > 0}
@@ -435,43 +479,7 @@ const SwapUI: React.FC<SwapUIProps> = ({
           >
             Stake Coins
           </button>
-          {/* Auto stake and auto swap checkboxes */}
-          <div className="flex flex-row items-center space-x-2">
-            <input
-              type="checkbox"
-              id="autoStake"
-              className="form-checkbox h-5 w-5 text-indigo-600"
-              checked={autoStakeEnabled}
-              onChange={(e) => setAutoStakeEnabled(e.target.checked)}
-            />
-            <label htmlFor="autoStake" className="text-sm text-gray-700">Auto stake</label>
-            <input
-              type="checkbox"
-              id="autoSwap"
-              className="form-checkbox h-5 w-5 text-indigo-600"
-              checked={autoSwapEnabled}
-              onChange={(e) => setAutoSwapEnabled(e.target.checked)}
-            />
-            <label htmlFor="autoSwap" className="text-sm text-gray-700">Auto swap</label>
-          </div>
-          {/* Slider for autoSwap percentage (visible only when Auto swap is enabled) */}
-          {autoSwapEnabled && (
-            <div className="mt-2 w-full">
-              <label htmlFor="autoSwapPercentage" className="text-sm text-gray-700">
-                Auto swap percentage: {autoSwapPercentage}%
-              </label>
-              <input
-                type="range"
-                id="autoSwapPercentage"
-                min="0"
-                max="100"
-                step="1"
-                value={autoSwapPercentage}
-                onChange={(e) => setAutoSwapPercentage(Number(e.target.value))}
-                className="w-full"
-              />
-            </div>
-          )}
+          }
           {/* Display the staking lock remaining message and expected rewards */}
           {stakeLockRemaining > 0 && stakeOutcome && (
             <div>
