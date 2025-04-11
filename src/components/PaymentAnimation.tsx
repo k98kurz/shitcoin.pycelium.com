@@ -85,7 +85,7 @@ const PaymentAnimation: React.FC<PaymentAnimationProps> = ({ onComplete }) => {
             <>
               {/* Product details */}
               <div className="bg-white/20 backdrop-blur-lg p-4 rounded-lg shadow-xl text-center mb-4">
-                <h3 className="text-xl font-bold text-white">Stable Coins</h3>
+                <h3 className="text-xl font-bold text-white">"Stable" Coins</h3>
                 <p className="text-lg text-white">$420.69</p>
               </div>
               {/* Credit Card Form with auto-typing */}
