@@ -19,7 +19,7 @@ const PRICE_HISTORY_LENGTH = 200;
 const PRICE_UPDATE_INTERVAL = 500; // ms (0.5 seconds)
 const SHORT_MOMENTUM_WAVE_PERIOD = 60; // 1 minute cycle
 const SHORT_MOMENTUM_MAGNITUDE = 0.01; // +/- 1% bias
-const LONG_MOMENTUM_WAVE_PERIOD = 594; // ~10 minute cycle 10% out of phase
+const LONG_MOMENTUM_WAVE_PERIOD = 540; // ~10 minute cycle 10% out of phase
 const LONG_MOMENTUM_MAGNITUDE = 0.005; // +/- 0.5% bias
 
 let intervalId: number|undefined = undefined;
