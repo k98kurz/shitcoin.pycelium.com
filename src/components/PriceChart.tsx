@@ -55,7 +55,7 @@ const PriceChart: React.FC<PriceChartProps> = ({
 
   return (
     <div className="bg-white p-4 rounded-lg shadow-md overflow-hidden">
-       <h3 className="text-sm font-medium text-gray-500 mb-2">Price History (Last {data.length} points)</h3>
+       <h3 className="text-sm font-medium text-gray-500 mb-2">Price History (Last {data.length} points, log scale)</h3>
       <svg
         viewBox={`0 0 ${width} ${height}`}
         preserveAspectRatio="none" // Allows stretching

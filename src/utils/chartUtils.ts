@@ -50,6 +50,7 @@ export const calculateSMA = (data: number[], period: number): (number | null)[] 
 /**
  * Creates an SVG path string for a simple line chart from numeric data points.
  * Handles scaling and padding. Correctly maps points even if data starts with nulls.
+ * Converts data to a base-10 logarthmic scale before drawing lines.
  * @param data The array of data points (can include nulls).
  * @param width The width of the SVG chart area.
  * @param height The height of the SVG chart area.
@@ -68,13 +69,18 @@ export const generateSvgPath = (
 ): string => {
   if (totalPoints < 2) return '';
 
+  // convert to logarithmic form
+  data = data.map(i => typeof(i) == 'number' ? Math.log10(i+1) : null);
+  dataMax = Math.log10(dataMax+1);
+  dataMin = Math.log10(dataMin+1);
+
   const dataRange = dataMax - dataMin === 0 ? 1 : dataMax - dataMin; // Avoid division by zero
   const padding = 10; // 10px padding
   const effectiveHeight = height - 2 * padding;
   const effectiveMin = dataMin;
   const effectiveRange = dataRange;
 
-  let pathSegments: string[] = [];
+  const pathSegments: string[] = [];
   let currentSegmentPoints: string[] = [];
 
   for (let i = 0; i < data.length; i++) {
