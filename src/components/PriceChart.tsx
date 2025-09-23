@@ -1,4 +1,4 @@
-import React from 'react';
+import { useState, useRef, MouseEvent } from 'react';
 import { generateSvgPath, calculateSMA } from '../utils/chartUtils';
 
 interface PriceChartProps {
@@ -14,6 +14,39 @@ const PriceChart: React.FC<PriceChartProps> = ({
   height = 200,
   smaPeriod = 20
 }) => {
+  const [legendMessage, setLegendMessage] = useState('');
+  const [legendClass, setLegendClass] = useState('');
+  const [timeoutToClear, setTimeoutToClear] = useState(0);
+  const svgRef = useRef<SVGSVGElement>(null);
+
+  const updateLegend = (event: MouseEvent) => {
+    if (!svgRef.current) return;
+
+    // get SVG bounding box and mouse coordinates
+    const svg = svgRef.current;
+    const rect = svg.getBoundingClientRect();
+    const mouseX = event.clientX - rect.left; // Mouse x relative to SVG
+
+    // Scale mouseX to data x (assuming x is scaled to SVG width)
+    const xScale = (rect.right - rect.left) / data.length;
+    const dataX = Math.round(mouseX / xScale);
+
+    // get closest data point and make some calculations
+    const closestPoint = data[dataX];
+    const difference = Math.round((data[data.length - 1] - closestPoint) / closestPoint * 10000) / 100;
+    setLegendClass(difference >= 0 ? 'text-blue-600' : 'text-red-600');
+
+    // set message
+    setLegendMessage(`${closestPoint.toFixed(4)}; current price is ${difference >= 0 ? '+' : ''}${difference}% different`)
+  }
+
+  const clearLegendMessage = () => {
+    if (timeoutToClear) {
+      clearTimeout(timeoutToClear);
+    }
+    setTimeoutToClear(setTimeout(() => setLegendMessage(''), 2000));
+  }
+
   // Ensure we have enough data points for meaningful display and SMA calculation
   const MIN_POINTS_FOR_SMA = Math.max(2, smaPeriod); // Need at least 2 points for a line, and `smaPeriod` for SMA
   if (!data || data.length < MIN_POINTS_FOR_SMA) {
@@ -55,12 +88,15 @@ const PriceChart: React.FC<PriceChartProps> = ({
 
   return (
     <div className="bg-white p-4 rounded-lg shadow-md overflow-hidden">
-       <h3 className="text-sm font-medium text-gray-500 mb-2">Price History (Last {data.length} points, log scale)</h3>
+      <h3 className="text-sm font-medium text-gray-500 mb-2">Price History (Last {data.length} points, log scale)</h3>
       <svg
         viewBox={`0 0 ${width} ${height}`}
         preserveAspectRatio="none" // Allows stretching
         className="w-full" // Take full width of container
         style={{ height: `${height}px` }} // Set explicit height for the SVG area
+        onMouseMove={updateLegend}
+        onMouseOut={clearLegendMessage}
+        ref={svgRef}
       >
         {/* SMA Line (drawn first, so it's underneath) */}
         <path
@@ -72,7 +108,7 @@ const PriceChart: React.FC<PriceChartProps> = ({
           strokeLinejoin="round"
           strokeDasharray="4 4" // Make SMA dashed
         />
-         {/* Price Line */}
+        {/* Price Line */}
         <path
           d={pricePathData}
           fill="none"
@@ -82,18 +118,23 @@ const PriceChart: React.FC<PriceChartProps> = ({
           strokeLinejoin="round"
         />
       </svg>
-       {/* Optional: Add legend or labels later */}
-       <div className="flex justify-end space-x-4 text-xs mt-2 px-2">
-         <div className="flex items-center">
-           <span className="w-3 h-0.5 bg-blue-500 mr-1"></span> Price &gt;= SMA
-         </div>
-         <div className="flex items-center">
-           <span className="w-3 h-0.5 bg-red-500 mr-1"></span> Price &lt; SMA
-         </div>
-         <div className="flex items-center">
-           <span className="w-3 h-0.5 border-t border-dashed border-orange-400 opacity-70 mr-1"></span> SMA ({smaPeriod})
-         </div>
-       </div>
+      {/* Legend at bottom of chart */}
+      <div className="flex justify-end space-x-4 text-xs mt-2 px-2">
+        <div className="flex items-center">
+          <span className={legendClass}>
+            {legendMessage}
+          </span>
+        </div>
+        <div className="flex items-center">
+          <span className="w-3 h-0.5 bg-blue-500 mr-1"></span> Price &gt;= SMA
+        </div>
+        <div className="flex items-center">
+          <span className="w-3 h-0.5 bg-red-500 mr-1"></span> Price &lt; SMA
+        </div>
+        <div className="flex items-center">
+          <span className="w-3 h-0.5 border-t border-dashed border-orange-400 opacity-70 mr-1"></span> SMA ({smaPeriod})
+        </div>
+      </div>
     </div>
   );
 };
