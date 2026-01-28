@@ -8,9 +8,10 @@ interface WalletProps {
   onWalletUpdate: (updater: (prevWallet: { $HIT: number; fAuxUSD: number }) => { $HIT: number; fAuxUSD: number }) => void;
 }
 
+const baseScore = Math.log(421) * Math.PI;
 const Wallet: React.FC<WalletProps> = ({ $hitBalance, fAuxUSDBalance, currentPrice, onWalletUpdate }) => {
   const score = useMemo(() => {
-    return Math.log((fAuxUSDBalance + ($hitBalance * currentPrice)) + 1) * Math.PI;
+    return Math.log((fAuxUSDBalance + ($hitBalance * currentPrice)) + 1) * Math.PI - baseScore;
   }, [$hitBalance, fAuxUSDBalance, currentPrice]);
 
   // --- Withdrawal modal state and logic ---
@@ -117,7 +118,7 @@ const Wallet: React.FC<WalletProps> = ({ $hitBalance, fAuxUSDBalance, currentPri
         </div>
         <div className="flex justify-between items-center">
           <span className="font-medium text-gray-600">Score:</span>
-          <span className="text-lg font-bold text-indigo-700">{score.toFixed(3)}</span>
+          <span className={`text-lg font-bold ${score > 0 ? 'text-blue-700' : 'text-orange-700'}`}>{score.toFixed(3)}</span>
         </div>
       </div>
       {showModal && (
