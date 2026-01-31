@@ -50,7 +50,7 @@ const PriceDisplay: React.FC<PriceDisplayProps> = ({ price, previousPrice }) => 
         {" / "}
         <span className="relative group cursor-help">
           $HIT
-          <span className="absolute w-80 left-1/2 top-full mt-2 -translate-x-1/2 bg-gray-800 text-white text-xs rounded py-1 px-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
+          <span className="absolute w-80 left-[5%] top-full mt-2 -translate-x-1/2 bg-gray-800 text-white text-xs rounded py-1 px-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
             $HIT is the High Intensity Trading token, designed to compress a decade of financial market stress into a single afternoon
           </span>
         </span>
