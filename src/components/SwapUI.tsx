@@ -2,11 +2,12 @@ import React, { useState, useEffect, useRef } from 'react';
 import { ArrowRightLeft } from 'lucide-react';
 import { calculateSMA } from '../utils/chartUtils';
 
-type Currency = '$HIT' | 'fAuxUSD';
+type Currency = '$HIT' | 'fAuxUSD' | 'i$HIT';
 
 interface SwapUIProps {
   $hitBalance: number;
   fAuxUSDBalance: number;
+  i$hitBalance: number;
   currentPrice: number; // Price of 1 HIT in fAuxUSD
   onSwap: (fromCurrency: Currency, toCurrency: Currency, amount: number) => void;
   onStake: (multiplier: number) => void; // New onStake callback for staking bonus/penalty
@@ -23,6 +24,7 @@ interface StakeOutcome {
 const SwapUI: React.FC<SwapUIProps> = ({
   $hitBalance,
   fAuxUSDBalance,
+  i$hitBalance,
   currentPrice,
   onSwap,
   onStake,
@@ -34,6 +36,20 @@ const SwapUI: React.FC<SwapUIProps> = ({
   const [toAmount, setToAmount] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
 
+  const getBalance = (currency: Currency): number => {
+    switch (currency) {
+      case '$HIT': return $hitBalance;
+      case 'fAuxUSD': return fAuxUSDBalance;
+      case 'i$HIT': return i$hitBalance;
+    }
+  };
+
+  const toggleCurrency = (currency: Currency, otherSideCurrency: Currency): Currency => {
+    const allCurrencies: Currency[] = ['$HIT', 'fAuxUSD', 'i$HIT'];
+    const availableCurrencies = allCurrencies.filter(c => c !== currency && c !== otherSideCurrency);
+    return availableCurrencies[0];
+  };
+
   // --- Staking-related state ---
   const [stakeLockRemaining, setStakeLockRemaining] = useState<number>(0);
   const [stakeOutcome, setStakeOutcome] = useState<StakeOutcome | null>(null);
@@ -43,6 +59,7 @@ const SwapUI: React.FC<SwapUIProps> = ({
   const [autoStakeEnabled, setAutoStakeEnabled] = useState<boolean>(false);
   const [autoSwapEnabled, setAutoSwapEnabled] = useState<boolean>(false);
   const [autoSwapPercentage, setAutoSwapPercentage] = useState<number>(10);
+  const [autoSwapIHITEnabled, setAutoSwapIHITEnabled] = useState<boolean>(true);
 
   const handleAmountChange = (value: string, type: 'from' | 'to') => {
     const numericValue = parseFloat(value);
@@ -66,25 +83,49 @@ const SwapUI: React.FC<SwapUIProps> = ({
       return;
     }
 
+    const getPrecision = (currency: Currency): number => {
+      return currency === 'fAuxUSD' ? 2 : 8;
+    };
+
     if (type === 'from') {
       setFromAmount(value);
-      if (fromCurrency === 'fAuxUSD') {
-        // Buying $HIT with fAuxUSD
-        setToAmount((numericValue / currentPrice).toFixed(8));
+      let result: number;
+      if (fromCurrency === 'fAuxUSD' && toCurrency === '$HIT') {
+        result = numericValue / currentPrice;
+      } else if (fromCurrency === 'fAuxUSD' && toCurrency === 'i$HIT') {
+        result = numericValue * currentPrice;
+      } else if (fromCurrency === '$HIT' && toCurrency === 'fAuxUSD') {
+        result = numericValue * currentPrice;
+      } else if (fromCurrency === '$HIT' && toCurrency === 'i$HIT') {
+        result = numericValue * currentPrice * currentPrice;
+      } else if (fromCurrency === 'i$HIT' && toCurrency === 'fAuxUSD') {
+        result = numericValue / currentPrice;
+      } else if (fromCurrency === 'i$HIT' && toCurrency === '$HIT') {
+        result = numericValue / (currentPrice * currentPrice);
       } else {
-        // Selling $HIT for fAuxUSD
-        setToAmount((numericValue * currentPrice).toFixed(2));
+        result = 0;
       }
+      setToAmount(result.toFixed(getPrecision(toCurrency)));
     } else {
       // type === 'to'
       setToAmount(value);
-      if (toCurrency === '$HIT') {
-        // Buying $HIT with fAuxUSD
-        setFromAmount((numericValue * currentPrice).toFixed(2));
+      let result: number;
+      if (toCurrency === 'fAuxUSD' && fromCurrency === '$HIT') {
+        result = numericValue / currentPrice;
+      } else if (toCurrency === 'fAuxUSD' && fromCurrency === 'i$HIT') {
+        result = numericValue * currentPrice;
+      } else if (toCurrency === '$HIT' && fromCurrency === 'fAuxUSD') {
+        result = numericValue * currentPrice;
+      } else if (toCurrency === '$HIT' && fromCurrency === 'i$HIT') {
+        result = numericValue / (currentPrice * currentPrice);
+      } else if (toCurrency === 'i$HIT' && fromCurrency === 'fAuxUSD') {
+        result = numericValue / currentPrice;
+      } else if (toCurrency === 'i$HIT' && fromCurrency === '$HIT') {
+        result = numericValue * currentPrice * currentPrice;
       } else {
-        // Selling $HIT for fAuxUSD
-        setFromAmount((numericValue / currentPrice).toFixed(8));
+        result = 0;
       }
+      setFromAmount(result.toFixed(getPrecision(fromCurrency)));
     }
   };
 
@@ -102,7 +143,7 @@ const SwapUI: React.FC<SwapUIProps> = ({
       return;
     }
 
-    const balance = fromCurrency === '$HIT' ? $hitBalance : fAuxUSDBalance;
+    const balance = getBalance(fromCurrency);
     if (amount > balance) {
       amount = balance;
     }
@@ -115,7 +156,7 @@ const SwapUI: React.FC<SwapUIProps> = ({
       setFromAmount('');
       setToAmount('');
     } else if (amount > (balance - amount)) {
-      setFromAmount((balance - amount).toFixed(fromCurrency === '$HIT' ? 8 : 2));
+      setFromAmount((balance - amount).toFixed(fromCurrency === 'fAuxUSD' ? 2 : 8));
       setToAmount('');
     }
   };
@@ -131,16 +172,16 @@ const SwapUI: React.FC<SwapUIProps> = ({
   }, [currentPrice, fromCurrency, toCurrency]);
 
   const handleMaxClick = () => {
-    const balance = fromCurrency === '$HIT' ? $hitBalance : fAuxUSDBalance;
-    const precision = fromCurrency === '$HIT' ? 8 : 2;
+    const balance = getBalance(fromCurrency);
+    const precision = fromCurrency === 'fAuxUSD' ? 2 : 8;
     const formattedBalance = balance.toFixed(precision);
     handleAmountChange(formattedBalance, 'from');
   };
 
   const handleAmountClick = (percentage: number) => {
-    const balance = fromCurrency === '$HIT' ? $hitBalance : fAuxUSDBalance;
+    const balance = getBalance(fromCurrency);
     const amount = balance * percentage;
-    handleAmountChange(amount.toFixed(fromCurrency === '$HIT' ? 8 : 2), 'from');
+    handleAmountChange(amount.toFixed(fromCurrency === 'fAuxUSD' ? 2 : 8), 'from');
   };
 
   // --- New staking functionality ---
@@ -248,6 +289,11 @@ const SwapUI: React.FC<SwapUIProps> = ({
     $hitBalanceRef.current = $hitBalance;
   }, [$hitBalance]);
 
+  const i$hitBalanceRef = useRef(i$hitBalance);
+  useEffect(() => {
+    i$hitBalanceRef.current = i$hitBalance;
+  }, [i$hitBalance]);
+
   const priceHistoryRef = useRef(priceHistory);
   useEffect(() => {
     priceHistoryRef.current = priceHistory;
@@ -270,6 +316,11 @@ const SwapUI: React.FC<SwapUIProps> = ({
   useEffect(() => {
     autoSwapPercentageRef.current = autoSwapPercentage;
   }, [autoSwapPercentage]);
+
+  const autoSwapIHITEnabledRef = useRef(autoSwapIHITEnabled);
+  useEffect(() => {
+    autoSwapIHITEnabledRef.current = autoSwapIHITEnabled;
+  }, [autoSwapIHITEnabled]);
 
   // --- AutoStake interval (runs every 7 seconds) ---
   useEffect(() => {
@@ -295,14 +346,46 @@ const SwapUI: React.FC<SwapUIProps> = ({
       // Get the configured proportion from the slider (percentage converted to fraction)
       const proportion = autoSwapPercentageRef.current / 100;
       if (currentPriceRef.current > lastSma) {
-        const amount = fAuxUSDBalanceRef.current * proportion;
-        if (amount > 0) {
-          onSwapRef.current('fAuxUSD', '$HIT', amount);
+        // Positive signal
+        if (autoSwapIHITEnabledRef.current) {
+          // Multi-leg swap: i$HIT → fAuxUSD → $HIT
+          const firstAmount = i$hitBalanceRef.current * proportion;
+          if (firstAmount > 0) {
+            onSwapRef.current('i$HIT', 'fAuxUSD', firstAmount);
+          }
+          // Second leg uses the same proportion applied to the new fAuxUSD balance
+          // Note: This will use the updated balance after the first swap
+          const secondAmount = fAuxUSDBalanceRef.current * proportion;
+          if (secondAmount > 0) {
+            onSwapRef.current('fAuxUSD', '$HIT', secondAmount);
+          }
+        } else {
+          // Original behavior: fAuxUSD → $HIT
+          const amount = fAuxUSDBalanceRef.current * proportion;
+          if (amount > 0) {
+            onSwapRef.current('fAuxUSD', '$HIT', amount);
+          }
         }
       } else if (currentPriceRef.current < lastSma) {
-        const amount = $hitBalanceRef.current * proportion;
-        if (amount > 0) {
-          onSwapRef.current('$HIT', 'fAuxUSD', amount);
+        // Negative signal
+        if (autoSwapIHITEnabledRef.current) {
+          // Multi-leg swap: $HIT → fAuxUSD → i$HIT
+          const firstAmount = $hitBalanceRef.current * proportion;
+          if (firstAmount > 0) {
+            onSwapRef.current('$HIT', 'fAuxUSD', firstAmount);
+          }
+          // Second leg uses the same proportion applied to the new fAuxUSD balance
+          // Note: This will use the updated balance after the first swap
+          const secondAmount = fAuxUSDBalanceRef.current * proportion;
+          if (secondAmount > 0) {
+            onSwapRef.current('fAuxUSD', 'i$HIT', secondAmount);
+          }
+        } else {
+          // Original behavior: $HIT → fAuxUSD
+          const amount = $hitBalanceRef.current * proportion;
+          if (amount > 0) {
+            onSwapRef.current('$HIT', 'fAuxUSD', amount);
+          }
         }
       }
     }, 1000);
@@ -365,13 +448,35 @@ const SwapUI: React.FC<SwapUIProps> = ({
             />
           </div>
         )}
+        {/* Checkbox for i$HIT auto-swap (visible only when Auto swap is enabled) */}
+        {autoSwapEnabled && (
+          <div className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              id="autoSwapIHIT"
+              className="form-checkbox h-5 w-5 text-indigo-600"
+              checked={autoSwapIHITEnabled}
+              onChange={(e) => setAutoSwapIHITEnabled(e.target.checked)}
+            />
+            <label htmlFor="autoSwapIHIT" className="text-sm text-gray-700">
+              Include i$HIT in auto-swap
+            </label>
+          </div>
+        )}
 
         {!autoSwapEnabled &&
           <>
             {/* From Currency Input */}
             <div>
               <label htmlFor="fromAmount" className="block text-sm font-medium text-gray-500 mb-1">
-                Spend ({fromCurrency})
+                Spend (
+                <span
+                  onClick={() => setFromCurrency(toggleCurrency(fromCurrency, toCurrency))}
+                  className="text-indigo-600 hover:text-indigo-800 cursor-pointer font-semibold"
+                >
+                  {fromCurrency}
+                </span>
+                )
               </label>
               <input
                 type="number"
@@ -390,16 +495,16 @@ const SwapUI: React.FC<SwapUIProps> = ({
                   onClick={handleMaxClick}
                   className="text-indigo-600 hover:text-indigo-800 focus:outline-none underline disabled:text-gray-400 disabled:no-underline disabled:cursor-not-allowed"
                   title={`Use max ${fromCurrency} balance`}
-                  disabled={(fromCurrency === '$HIT' ? $hitBalance : fAuxUSDBalance) <= 1e-9 || stakeLockRemaining > 0}
+                  disabled={getBalance(fromCurrency) <= 1e-9 || stakeLockRemaining > 0}
                 >
-                  {(fromCurrency === '$HIT' ? $hitBalance : fAuxUSDBalance).toFixed(fromCurrency === '$HIT' ? 4 : 2)}
+                  {getBalance(fromCurrency).toFixed(fromCurrency === 'fAuxUSD' ? 2 : 4)}
                 </button>
                 &nbsp;&nbsp;&nbsp;(
                 <button
                   onClick={() => handleAmountClick(0.5)}
                   className="text-indigo-600 hover:text-indigo-800 focus:outline-none underline disabled:text-gray-400 disabled:no-underline disabled:cursor-not-allowed"
                   title="Use 50% of balance"
-                  disabled={(fromCurrency === '$HIT' ? $hitBalance : fAuxUSDBalance) <= 1e-9 || stakeLockRemaining > 0}
+                  disabled={getBalance(fromCurrency) <= 1e-9 || stakeLockRemaining > 0}
                 >
                   50%
                 </button>
@@ -408,7 +513,7 @@ const SwapUI: React.FC<SwapUIProps> = ({
                   onClick={() => handleAmountClick(0.25)}
                   className="text-indigo-600 hover:text-indigo-800 focus:outline-none underline disabled:text-gray-400 disabled:no-underline disabled:cursor-not-allowed"
                   title="Use 25% of balance"
-                  disabled={(fromCurrency === '$HIT' ? $hitBalance : fAuxUSDBalance) <= 1e-9 || stakeLockRemaining > 0}
+                  disabled={getBalance(fromCurrency) <= 1e-9 || stakeLockRemaining > 0}
                 >
                   25%
                 </button>
@@ -430,7 +535,14 @@ const SwapUI: React.FC<SwapUIProps> = ({
             {/* To Currency Input */}
             <div>
               <label htmlFor="toAmount" className="block text-sm font-medium text-gray-500 mb-1">
-                Receive ({toCurrency})
+                Receive (
+                <span
+                  onClick={() => setToCurrency(toggleCurrency(toCurrency, fromCurrency))}
+                  className="text-indigo-600 hover:text-indigo-800 cursor-pointer font-semibold"
+                >
+                  {toCurrency}
+                </span>
+                )
               </label>
               <input
                 type="number"
@@ -444,7 +556,7 @@ const SwapUI: React.FC<SwapUIProps> = ({
                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
               />
               <p className="text-xs text-gray-500 mt-1">
-                Balance: {(toCurrency === '$HIT' ? $hitBalance : fAuxUSDBalance).toFixed(toCurrency === '$HIT' ? 4 : 2)}
+                Balance: {getBalance(toCurrency).toFixed(toCurrency === 'fAuxUSD' ? 2 : 4)}
               </p>
             </div>
             <div className="flex flex-col items-center space-y-2">

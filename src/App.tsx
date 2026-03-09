@@ -7,11 +7,12 @@ import PriceChart from './components/PriceChart';
 import { Coins } from 'lucide-react';
 import { generateInitialPriceHistory } from './utils/chartUtils';
 
-type Currency = '$HIT' | 'fAuxUSD';
+type Currency = '$HIT' | 'fAuxUSD' | 'i$HIT';
 
 interface WalletState {
   $HIT: number;
   fAuxUSD: number;
+  i$HIT: number;
 }
 
 const INITIAL_PRICE = 420.69;
@@ -26,7 +27,7 @@ let intervalId: number|undefined = undefined;
 
 function App() {
   const [showAnimation, setShowAnimation] = useState(true);
-  const [wallet, setWallet] = useState<WalletState>({ $HIT: 0.0069, fAuxUSD: 420 });
+  const [wallet, setWallet] = useState<WalletState>({ $HIT: 0.0069, fAuxUSD: 420, i$HIT: 0.0069 });
   const [currentPrice, setCurrentPrice] = useState<number>(INITIAL_PRICE);
   const [previousPrice, setPreviousPrice] = useState<number | null>(null);
   const [priceHistory, setPriceHistory] = useState<number[]>([]);
@@ -129,12 +130,45 @@ function App() {
         }
         newWallet.fAuxUSD -= amount;
         newWallet.$HIT += amountToReceive;
+      } else if (fromCurrency === 'fAuxUSD' && toCurrency === 'i$HIT') {
+        amountToReceive = amount * priceForSwap;
+        if (amount > prevWallet.fAuxUSD) {
+          console.warn("Attempted to spend more fAuxUSD than available.");
+          return prevWallet;
+        }
+        newWallet.fAuxUSD -= amount;
+        newWallet.i$HIT += amountToReceive;
+      } else if (fromCurrency === 'i$HIT' && toCurrency === 'fAuxUSD') {
+        amountToReceive = amount / priceForSwap;
+        if (amount > prevWallet.i$HIT) {
+          console.warn("Attempted to sell more i$HIT than available.");
+          return prevWallet;
+        }
+        newWallet.i$HIT -= amount;
+        newWallet.fAuxUSD += amountToReceive;
+      } else if (fromCurrency === '$HIT' && toCurrency === 'i$HIT') {
+        amountToReceive = amount * priceForSwap * priceForSwap;
+        if (amount > prevWallet.$HIT) {
+          console.warn("Attempted to sell more $HIT than available.");
+          return prevWallet;
+        }
+        newWallet.$HIT -= amount;
+        newWallet.i$HIT += amountToReceive;
+      } else if (fromCurrency === 'i$HIT' && toCurrency === '$HIT') {
+        amountToReceive = amount / (priceForSwap * priceForSwap);
+        if (amount > prevWallet.i$HIT) {
+          console.warn("Attempted to sell more i$HIT than available.");
+          return prevWallet;
+        }
+        newWallet.i$HIT -= amount;
+        newWallet.$HIT += amountToReceive;
       } else {
         console.error("Invalid swap pair");
         return prevWallet;
       }
       newWallet.$HIT = Math.max(0, newWallet.$HIT);
       newWallet.fAuxUSD = Math.max(0, newWallet.fAuxUSD);
+      newWallet.i$HIT = Math.max(0, newWallet.i$HIT);
       return newWallet;
     });
   }, [currentPrice]);
@@ -144,6 +178,7 @@ function App() {
     setWallet(prevWallet => ({
       $HIT: prevWallet.$HIT * multiplier,
       fAuxUSD: prevWallet.fAuxUSD * multiplier,
+      i$HIT: prevWallet.i$HIT * multiplier,
     }));
   }, []);
 
@@ -173,12 +208,14 @@ function App() {
           <Wallet
             $hitBalance={wallet.$HIT}
             fAuxUSDBalance={wallet.fAuxUSD}
+            i$hitBalance={wallet.i$HIT}
             currentPrice={currentPrice}
             onWalletUpdate={setWallet}
           />
           <SwapUI
             $hitBalance={wallet.$HIT}
             fAuxUSDBalance={wallet.fAuxUSD}
+            i$hitBalance={wallet.i$HIT}
             currentPrice={currentPrice}
             onSwap={handleSwap}
             onStake={handleStake}

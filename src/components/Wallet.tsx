@@ -4,15 +4,17 @@ import { Wallet as WalletIcon } from 'lucide-react'; // Renamed to avoid conflic
 interface WalletProps {
   $hitBalance: number;
   fAuxUSDBalance: number;
+  i$hitBalance: number;
   currentPrice: number;
-  onWalletUpdate: (updater: (prevWallet: { $HIT: number; fAuxUSD: number }) => { $HIT: number; fAuxUSD: number }) => void;
+  onWalletUpdate: (updater: (prevWallet: { $HIT: number; fAuxUSD: number; i$HIT: number }) => { $HIT: number; fAuxUSD: number; i$HIT: number }) => void;
 }
 
 const baseScore = Math.log(421) * Math.PI;
-const Wallet: React.FC<WalletProps> = ({ $hitBalance, fAuxUSDBalance, currentPrice, onWalletUpdate }) => {
+const Wallet: React.FC<WalletProps> = ({ $hitBalance, fAuxUSDBalance, i$hitBalance, currentPrice, onWalletUpdate }) => {
   const score = useMemo(() => {
-    return Math.log((fAuxUSDBalance + ($hitBalance * currentPrice)) + 1) * Math.PI - baseScore;
-  }, [$hitBalance, fAuxUSDBalance, currentPrice]);
+    const totalValue = fAuxUSDBalance + ($hitBalance * currentPrice) + (i$hitBalance / currentPrice);
+    return Math.log(totalValue + 1) * Math.PI - baseScore;
+  }, [$hitBalance, fAuxUSDBalance, i$hitBalance, currentPrice]);
 
   // --- Withdrawal modal state and logic ---
   // Modal stages: 'confirm' (initial confirmation),
@@ -39,6 +41,7 @@ const Wallet: React.FC<WalletProps> = ({ $hitBalance, fAuxUSDBalance, currentPri
         onWalletUpdate(prev => ({
           $HIT: prev.$HIT * (1 - withdrawRate),
           fAuxUSD: prev.fAuxUSD * (1 - withdrawRate),
+          i$HIT: prev.i$HIT * (1 - withdrawRate),
         }));
       }, 1000);
       return () => {
@@ -82,16 +85,16 @@ const Wallet: React.FC<WalletProps> = ({ $hitBalance, fAuxUSDBalance, currentPri
         if (withdrawalIntervalRef.current) {
           clearInterval(withdrawalIntervalRef.current);
         }
-        // Convert all remaining $HIT to fAuxUSD and display the result.
+        // Convert all remaining $HIT and i$HIT to fAuxUSD and display the result.
         onWalletUpdate(prev => {
-          const convertedUSD = prev.fAuxUSD + (prev.$HIT * currentPrice);
+          const convertedUSD = prev.fAuxUSD + (prev.$HIT * currentPrice) + (prev.i$HIT / currentPrice);
           const profit = convertedUSD - 420.69;
           if (profit > 0) {
             setResultMessage(`Congrats, you cleared ${profit.toFixed(2)} fAuxUSD profit`);
           } else {
             setResultMessage(`You gave up ${Math.abs(profit).toFixed(2)} fAuxUSD, thanks for your business`);
           }
-          return { $HIT: 0, fAuxUSD: convertedUSD };
+          return { $HIT: 0, fAuxUSD: convertedUSD, i$HIT: 0 };
         });
         setModalStage('result');
         // After displaying the result, refresh the page after 10 seconds.
@@ -115,6 +118,15 @@ const Wallet: React.FC<WalletProps> = ({ $hitBalance, fAuxUSDBalance, currentPri
         <div className="flex justify-between items-center">
           <span className="font-medium text-gray-600">fAuxUSD:</span>
           <span className="text-lg font-bold text-green-700">{fAuxUSDBalance.toFixed(2)}</span>
+        </div>
+        <div className="flex justify-between items-center">
+          <span className="relative group cursor-help font-medium text-gray-600">
+            i$HIT:
+            <span className="absolute w-80 left-1/2 top-full mt-2 -translate-x-1/2 bg-gray-800 text-white text-xs rounded py-1 px-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10 pointer-events-none">
+              Inverse $HIT token: 1 / ($HIT price)
+            </span>
+          </span>
+          <span className="text-lg font-bold text-purple-700">{i$hitBalance.toFixed(4)}</span>
         </div>
         <div className="flex justify-between items-center">
           <span className="font-medium text-gray-600">Score:</span>
