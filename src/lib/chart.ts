@@ -9,16 +9,37 @@ export const LONG_MOMENTUM_MAGNITUDE = 0.005; // +/- 0.5% bias
  * Generates initial price history data.
  * @param initialPrice The starting price.
  * @param count The number of data points to generate.
+ * @param initialVolatility The starting volatility (default 0.08).
  * @returns An array of price numbers.
  */
-export const generateInitialPriceHistory = (initialPrice: number, count: number): number[] => {
+export const generateInitialPriceHistory = (
+  initialPrice: number,
+  count: number,
+  initialVolatility: number = 0.08
+): number[] => {
+  const startTimeOffset = Date.now() / 1000 - (count * PRICE_UPDATE_INTERVAL / 1000);
   const history: number[] = [initialPrice];
   let current = initialPrice;
+  let volatility = initialVolatility;
+
   for (let i = 1; i < count; i++) {
-    const change = (Math.random() - 0.5) * 0.1 * current; // +/- up to 5%
-    current = Math.max(0.01, current + change);
+    const timeSeconds = startTimeOffset + i * (PRICE_UPDATE_INTERVAL / 1000);
+
+    let vol = (Math.random() - 0.5) * 0.01 + volatility;
+    if (vol < 0.02) vol = 0.02;
+    else if (vol > 0.2) vol = 0.2;
+    volatility = vol;
+
+    const randomChange = ((Math.random() - 0.5) * vol) * current;
+    const shortMomentum = Math.sin(timeSeconds * (2 * Math.PI) / SHORT_MOMENTUM_WAVE_PERIOD);
+    const shortMomentumBias = shortMomentum * SHORT_MOMENTUM_MAGNITUDE * current;
+    const longMomentum = Math.sin(timeSeconds * (2 * Math.PI) / LONG_MOMENTUM_WAVE_PERIOD);
+    const longMomentumBias = longMomentum * LONG_MOMENTUM_MAGNITUDE * current;
+    const totalChange = randomChange + shortMomentumBias + longMomentumBias;
+    current = Math.max(0.01, current + totalChange);
     history.push(current);
   }
+
   return history;
 };
 

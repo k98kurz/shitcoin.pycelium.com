@@ -16,6 +16,7 @@ interface WalletState {
 }
 
 const INITIAL_PRICE = 420.69;
+const INITIAL_VOLATILITY = 0.08;
 
 let intervalId: number|undefined = undefined;
 
@@ -25,11 +26,11 @@ function App() {
   const [currentPrice, setCurrentPrice] = useState<number>(INITIAL_PRICE);
   const [previousPrice, setPreviousPrice] = useState<number | null>(null);
   const [priceHistory, setPriceHistory] = useState<number[]>([]);
-  const [volatility, setVolatility] = useState<number>(0.08);
+  const [volatility, setVolatility] = useState<number>(INITIAL_VOLATILITY);
 
   // Generate initial price history ONCE on mount.
   useEffect(() => {
-    const initialHistory = generateInitialPriceHistory(INITIAL_PRICE, PRICE_HISTORY_LENGTH);
+    const initialHistory = generateInitialPriceHistory(INITIAL_PRICE, PRICE_HISTORY_LENGTH, INITIAL_VOLATILITY);
     setPriceHistory(initialHistory);
     const lastGeneratedPrice = initialHistory[initialHistory.length - 1];
     const secondLastGeneratedPrice = initialHistory[initialHistory.length - 2] ?? lastGeneratedPrice;
