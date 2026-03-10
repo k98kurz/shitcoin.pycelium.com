@@ -1,3 +1,10 @@
+export const PRICE_HISTORY_LENGTH = 200;
+export const PRICE_UPDATE_INTERVAL = 500; // ms (0.5 seconds)
+export const SHORT_MOMENTUM_WAVE_PERIOD = 60; // 1 minute cycle
+export const SHORT_MOMENTUM_MAGNITUDE = 0.01; // +/- 1% bias
+export const LONG_MOMENTUM_WAVE_PERIOD = 540; // ~10 minute cycle 10% out of phase
+export const LONG_MOMENTUM_MAGNITUDE = 0.005; // +/- 0.5% bias
+
 /**
  * Generates initial price history data.
  * @param initialPrice The starting price.
@@ -13,6 +20,26 @@ export const generateInitialPriceHistory = (initialPrice: number, count: number)
     history.push(current);
   }
   return history;
+};
+
+export const calculateNextPrice = (
+  currentPrice: number,
+  volatility: number,
+  nowSeconds: number
+): { newPrice: number; updatedVolatility: number } => {
+  let vol = (Math.random() - 0.5) * 0.01 + volatility;
+  if (vol < 0.02) vol = 0.02;
+  else if (vol > 0.2) vol = 0.2;
+
+  const randomChange = ((Math.random() - 0.5) * vol) * currentPrice;
+  const shortMomentum = Math.sin(nowSeconds * (2 * Math.PI) / SHORT_MOMENTUM_WAVE_PERIOD);
+  const shortMomentumBias = shortMomentum * SHORT_MOMENTUM_MAGNITUDE * currentPrice;
+  const longMomentum = Math.sin(nowSeconds * (2 * Math.PI) / LONG_MOMENTUM_WAVE_PERIOD);
+  const longMomentumBias = longMomentum * LONG_MOMENTUM_MAGNITUDE * currentPrice;
+  const totalChange = randomChange + shortMomentumBias + longMomentumBias;
+  const newPrice = Math.max(0.01, currentPrice + totalChange);
+
+  return { newPrice, updatedVolatility: vol };
 };
 
 /**

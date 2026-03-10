@@ -5,7 +5,7 @@ import PriceDisplay from './components/PriceDisplay';
 import SwapUI from './components/SwapUI';
 import PriceChart from './components/PriceChart';
 import { Coins } from 'lucide-react';
-import { generateInitialPriceHistory } from './utils/chartUtils';
+import { generateInitialPriceHistory, calculateNextPrice, PRICE_HISTORY_LENGTH, PRICE_UPDATE_INTERVAL } from './utils/chartUtils';
 
 type Currency = '$HIT' | 'fAuxUSD' | 'i$HIT';
 
@@ -16,12 +16,6 @@ interface WalletState {
 }
 
 const INITIAL_PRICE = 420.69;
-const PRICE_HISTORY_LENGTH = 200;
-const PRICE_UPDATE_INTERVAL = 500; // ms (0.5 seconds)
-const SHORT_MOMENTUM_WAVE_PERIOD = 60; // 1 minute cycle
-const SHORT_MOMENTUM_MAGNITUDE = 0.01; // +/- 1% bias
-const LONG_MOMENTUM_WAVE_PERIOD = 540; // ~10 minute cycle 10% out of phase
-const LONG_MOMENTUM_MAGNITUDE = 0.005; // +/- 0.5% bias
 
 let intervalId: number|undefined = undefined;
 
@@ -80,18 +74,8 @@ function App() {
       const nowSeconds = Date.now() / 1000;
       setCurrentPrice(prevCurrentPrice => {
         setPreviousPrice(prevCurrentPrice);
-        let vol = (Math.random() - 0.5) * 0.01 + volatility;
-        if (vol < 0.02) vol = 0.02;
-        else if (vol > 0.2) vol = 0.2;
-        setVolatility(vol);
-
-        const randomChange = ((Math.random() - 0.5) * vol) * prevCurrentPrice;
-        const shortMomentum = Math.sin(nowSeconds * (2 * Math.PI) / SHORT_MOMENTUM_WAVE_PERIOD);
-        const shortMomentumBias = shortMomentum * SHORT_MOMENTUM_MAGNITUDE * prevCurrentPrice;
-        const longMomentum = Math.sin(nowSeconds * (2 * Math.PI) / LONG_MOMENTUM_WAVE_PERIOD);
-        const longMomentumBias = longMomentum * LONG_MOMENTUM_MAGNITUDE * prevCurrentPrice;
-        const totalChange = randomChange + shortMomentumBias + longMomentumBias;
-        const newPrice = Math.max(0.01, prevCurrentPrice + totalChange);
+        const { newPrice, updatedVolatility } = calculateNextPrice(prevCurrentPrice, volatility, nowSeconds);
+        setVolatility(updatedVolatility);
 
         setPriceHistory(prevHistory => {
           const updatedHistory = [...prevHistory, newPrice];
