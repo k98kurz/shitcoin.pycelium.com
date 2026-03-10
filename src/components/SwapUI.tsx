@@ -71,7 +71,10 @@ const SwapUI: React.FC<SwapUIProps> = ({
   const [autoStakeEnabled, setAutoStakeEnabled] = useState<boolean>(false);
   const [autoSwapEnabled, setAutoSwapEnabled] = useState<boolean>(false);
   const [autoSwapPercentage, setAutoSwapPercentage] = useState<number>(10);
-  const [autoSwapIHITEnabled, setAutoSwapIHITEnabled] = useState<boolean>(true);
+  const [autoSwapIntoHITEnabled, setAutoSwapIntoHITEnabled] =
+    useState<boolean>(true);
+  const [autoSwapIntoIHITEnabled, setAutoSwapIntoIHITEnabled] =
+    useState<boolean>(true);
 
   const handleAmountChange = (value: string, type: "from" | "to") => {
     const numericValue = parseFloat(value);
@@ -208,7 +211,7 @@ const SwapUI: React.FC<SwapUIProps> = ({
     );
   };
 
-  // --- New staking functionality ---
+  // --- Staking functionality ---
   const handleStakeCoins = () => {
     // Do nothing if a stake is already in progress.
     if (stakeLockRemaining > 0) return;
@@ -342,10 +345,15 @@ const SwapUI: React.FC<SwapUIProps> = ({
     autoSwapPercentageRef.current = autoSwapPercentage;
   }, [autoSwapPercentage]);
 
-  const autoSwapIHITEnabledRef = useRef(autoSwapIHITEnabled);
+  const autoSwapIntoHITEnabledRef = useRef(autoSwapIntoHITEnabled);
   useEffect(() => {
-    autoSwapIHITEnabledRef.current = autoSwapIHITEnabled;
-  }, [autoSwapIHITEnabled]);
+    autoSwapIntoHITEnabledRef.current = autoSwapIntoHITEnabled;
+  }, [autoSwapIntoHITEnabled]);
+
+  const autoSwapIntoIHITEnabledRef = useRef(autoSwapIntoIHITEnabled);
+  useEffect(() => {
+    autoSwapIntoIHITEnabledRef.current = autoSwapIntoIHITEnabled;
+  }, [autoSwapIntoIHITEnabled]);
 
   // --- AutoStake interval (runs every 7 seconds) ---
   useEffect(() => {
@@ -371,45 +379,29 @@ const SwapUI: React.FC<SwapUIProps> = ({
       // Get the configured proportion from the slider (percentage converted to fraction)
       const proportion = autoSwapPercentageRef.current / 100;
       if (currentPriceRef.current > lastSma) {
-        // Positive signal
-        if (autoSwapIHITEnabledRef.current) {
-          // Multi-leg swap: i$HIT → fAuxUSD → $HIT
-          const firstAmount = i$hitBalanceRef.current * proportion;
-          if (firstAmount > 0) {
-            onSwapRef.current("i$HIT", "fAuxUSD", firstAmount);
-          }
-          // Second leg uses the same proportion applied to the new fAuxUSD balance
-          // Note: This will use the updated balance after the first swap
+        // Positive signal: Always swap i$HIT → fAuxUSD
+        const firstAmount = i$hitBalanceRef.current * proportion;
+        if (firstAmount > 0) {
+          onSwapRef.current("i$HIT", "fAuxUSD", firstAmount);
+        }
+        // If "Swap into $HIT" is checked, swap fAuxUSD → $HIT
+        if (autoSwapIntoHITEnabledRef.current) {
           const secondAmount = fAuxUSDBalanceRef.current * proportion;
           if (secondAmount > 0) {
             onSwapRef.current("fAuxUSD", "$HIT", secondAmount);
           }
-        } else {
-          // Original behavior: fAuxUSD → $HIT
-          const amount = fAuxUSDBalanceRef.current * proportion;
-          if (amount > 0) {
-            onSwapRef.current("fAuxUSD", "$HIT", amount);
-          }
         }
       } else if (currentPriceRef.current < lastSma) {
-        // Negative signal
-        if (autoSwapIHITEnabledRef.current) {
-          // Multi-leg swap: $HIT → fAuxUSD → i$HIT
-          const firstAmount = $hitBalanceRef.current * proportion;
-          if (firstAmount > 0) {
-            onSwapRef.current("$HIT", "fAuxUSD", firstAmount);
-          }
-          // Second leg uses the same proportion applied to the new fAuxUSD balance
-          // Note: This will use the updated balance after the first swap
+        // Negative signal: Always swap $HIT → fAuxUSD
+        const firstAmount = $hitBalanceRef.current * proportion;
+        if (firstAmount > 0) {
+          onSwapRef.current("$HIT", "fAuxUSD", firstAmount);
+        }
+        // If "Swap into i$HIT" is checked, swap fAuxUSD → i$HIT
+        if (autoSwapIntoIHITEnabledRef.current) {
           const secondAmount = fAuxUSDBalanceRef.current * proportion;
           if (secondAmount > 0) {
             onSwapRef.current("fAuxUSD", "i$HIT", secondAmount);
-          }
-        } else {
-          // Original behavior: $HIT → fAuxUSD
-          const amount = $hitBalanceRef.current * proportion;
-          if (amount > 0) {
-            onSwapRef.current("$HIT", "fAuxUSD", amount);
           }
         }
       }
@@ -482,19 +474,39 @@ const SwapUI: React.FC<SwapUIProps> = ({
             />
           </div>
         )}
-        {/* Checkbox for i$HIT auto-swap (visible only when Auto swap is enabled) */}
+        {/* Checkboxes for auto-swap targets (visible only when Auto swap is enabled) */}
         {autoSwapEnabled && (
-          <div className="flex items-center space-x-2">
-            <input
-              type="checkbox"
-              id="autoSwapIHIT"
-              className="form-checkbox h-5 w-5 text-indigo-600"
-              checked={autoSwapIHITEnabled}
-              onChange={(e) => setAutoSwapIHITEnabled(e.target.checked)}
-            />
-            <label htmlFor="autoSwapIHIT" className="text-sm text-gray-700">
-              Include i$HIT in auto-swap
-            </label>
+          <div className="flex flex-col space-y-2">
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="autoSwapIntoHIT"
+                className="form-checkbox h-5 w-5 text-indigo-600"
+                checked={autoSwapIntoHITEnabled}
+                onChange={(e) => setAutoSwapIntoHITEnabled(e.target.checked)}
+              />
+              <label
+                htmlFor="autoSwapIntoHIT"
+                className="text-sm text-gray-700"
+              >
+                Swap into $HIT
+              </label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="autoSwapIntoIHIT"
+                className="form-checkbox h-5 w-5 text-indigo-600"
+                checked={autoSwapIntoIHITEnabled}
+                onChange={(e) => setAutoSwapIntoIHITEnabled(e.target.checked)}
+              />
+              <label
+                htmlFor="autoSwapIntoIHIT"
+                className="text-sm text-gray-700"
+              >
+                Swap into i$HIT
+              </label>
+            </div>
           </div>
         )}
 
