@@ -5,7 +5,7 @@ import PriceDisplay from './components/PriceDisplay';
 import SwapUI from './components/SwapUI';
 import PriceChart from './components/PriceChart';
 import { Coins } from 'lucide-react';
-import { generateInitialPriceHistory, calculateNextPrice, PRICE_HISTORY_LENGTH, PRICE_UPDATE_INTERVAL } from './utils/chartUtils';
+import { generateInitialPriceHistory, calculateNextPrice, PRICE_HISTORY_LENGTH, PRICE_UPDATE_INTERVAL } from './lib/chart';
 
 type Currency = '$HIT' | 'fAuxUSD' | 'i$HIT';
 

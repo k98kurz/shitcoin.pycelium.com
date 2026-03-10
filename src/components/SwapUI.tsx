@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ArrowRightLeft } from 'lucide-react';
-import { calculateSMA } from '../utils/chartUtils';
+import { calculateSMA } from '../lib/chart';
 
 type Currency = '$HIT' | 'fAuxUSD' | 'i$HIT';
 

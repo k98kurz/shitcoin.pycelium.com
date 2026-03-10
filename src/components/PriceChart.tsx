@@ -1,5 +1,5 @@
 import { useState, useRef, MouseEvent } from 'react';
-import { generateSvgPath, calculateSMA } from '../utils/chartUtils';
+import { generateSvgPath, calculateSMA } from '../lib/chart';
 
 interface PriceChartProps {
   data: number[];
