@@ -1,17 +1,17 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from "react";
 // Use Loader2 instead of LoaderCircle
-import { Loader2, CheckCircle } from 'lucide-react';
+import { Loader2, CheckCircle } from "lucide-react";
 
 interface PaymentAnimationProps {
   onComplete: () => void;
 }
 
 const PaymentAnimation: React.FC<PaymentAnimationProps> = ({ onComplete }) => {
-  const [status, setStatus] = useState<'processing' | 'complete'>('processing');
+  const [status, setStatus] = useState<"processing" | "complete">("processing");
   const [showForm, setShowForm] = useState(true);
-  const [cardNumber, setCardNumber] = useState('');
-  const [billingAddress, setBillingAddress] = useState('');
-  const [nameOnCard, setNameOnCard] = useState('');
+  const [cardNumber, setCardNumber] = useState("");
+  const [billingAddress, setBillingAddress] = useState("");
+  const [nameOnCard, setNameOnCard] = useState("");
 
   const cardNumberTarget = "1234 5678 1234 5678";
   const billingAddressTarget = "123 0th Street Nowhere, XZ 00000";
@@ -21,7 +21,7 @@ const PaymentAnimation: React.FC<PaymentAnimationProps> = ({ onComplete }) => {
   useEffect(() => {
     const animateField = (
       target: string,
-      setter: React.Dispatch<React.SetStateAction<string>>
+      setter: React.Dispatch<React.SetStateAction<string>>,
     ) => {
       return new Promise<void>((resolve) => {
         let index = 0;
@@ -53,7 +53,7 @@ const PaymentAnimation: React.FC<PaymentAnimationProps> = ({ onComplete }) => {
   useEffect(() => {
     if (!showForm) {
       const processingTimer = setTimeout(() => {
-        setStatus('complete');
+        setStatus("complete");
       }, 2500); // Change to complete after spinner is shown for 2.5 seconds
 
       const completeTimer = setTimeout(() => {
@@ -74,7 +74,9 @@ const PaymentAnimation: React.FC<PaymentAnimationProps> = ({ onComplete }) => {
         <header className="text-center py-2">
           <h1
             className="text-4xl font-bold text-white"
-            style={{ fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif' }}
+            style={{
+              fontFamily: '"Helvetica Neue", Helvetica, Arial, sans-serif',
+            }}
           >
             epirts
           </h1>
@@ -136,7 +138,7 @@ const PaymentAnimation: React.FC<PaymentAnimationProps> = ({ onComplete }) => {
           ) : (
             // Payment Animation Card with spinner or success message.
             <div className="bg-white/20 backdrop-blur-lg p-8 rounded-lg shadow-xl text-center">
-              {status === 'processing' ? (
+              {status === "processing" ? (
                 <>
                   <Loader2 className="animate-spin h-16 w-16 mx-auto mb-4 text-white" />
                   <h2 className="text-2xl text-white font-semibold mb-2">
@@ -148,7 +150,7 @@ const PaymentAnimation: React.FC<PaymentAnimationProps> = ({ onComplete }) => {
                   <div className="w-full bg-white/30 rounded-full h-2.5 mt-6">
                     <div
                       className="bg-green-400 h-2.5 rounded-full animate-pulse"
-                      style={{ width: '75%' }}
+                      style={{ width: "75%" }}
                     ></div>
                   </div>
                 </>
@@ -169,7 +171,8 @@ const PaymentAnimation: React.FC<PaymentAnimationProps> = ({ onComplete }) => {
         {/* Footer */}
         <footer className="text-center py-2">
           <p className="text-sm text-white opacity-80">
-            Disclaimer: epirts is not a real payment processor; nothing is actually happening
+            Disclaimer: epirts is not a real payment processor; nothing is
+            actually happening
           </p>
         </footer>
       </div>

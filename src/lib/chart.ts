@@ -15,9 +15,10 @@ export const LONG_MOMENTUM_MAGNITUDE = 0.005; // +/- 0.5% bias
 export const generateInitialPriceHistory = (
   initialPrice: number,
   count: number,
-  initialVolatility: number = 0.08
+  initialVolatility: number = 0.08,
 ): number[] => {
-  const startTimeOffset = Date.now() / 1000 - (count * PRICE_UPDATE_INTERVAL / 1000);
+  const startTimeOffset =
+    Date.now() / 1000 - (count * PRICE_UPDATE_INTERVAL) / 1000;
   const history: number[] = [initialPrice];
   let current = initialPrice;
   let volatility = initialVolatility;
@@ -30,10 +31,15 @@ export const generateInitialPriceHistory = (
     else if (vol > 0.2) vol = 0.2;
     volatility = vol;
 
-    const randomChange = ((Math.random() - 0.5) * vol) * current;
-    const shortMomentum = Math.sin(timeSeconds * (2 * Math.PI) / SHORT_MOMENTUM_WAVE_PERIOD);
-    const shortMomentumBias = shortMomentum * SHORT_MOMENTUM_MAGNITUDE * current;
-    const longMomentum = Math.sin(timeSeconds * (2 * Math.PI) / LONG_MOMENTUM_WAVE_PERIOD);
+    const randomChange = (Math.random() - 0.5) * vol * current;
+    const shortMomentum = Math.sin(
+      (timeSeconds * (2 * Math.PI)) / SHORT_MOMENTUM_WAVE_PERIOD,
+    );
+    const shortMomentumBias =
+      shortMomentum * SHORT_MOMENTUM_MAGNITUDE * current;
+    const longMomentum = Math.sin(
+      (timeSeconds * (2 * Math.PI)) / LONG_MOMENTUM_WAVE_PERIOD,
+    );
     const longMomentumBias = longMomentum * LONG_MOMENTUM_MAGNITUDE * current;
     const totalChange = randomChange + shortMomentumBias + longMomentumBias;
     current = Math.max(0.01, current + totalChange);
@@ -46,17 +52,23 @@ export const generateInitialPriceHistory = (
 export const calculateNextPrice = (
   currentPrice: number,
   volatility: number,
-  nowSeconds: number
+  nowSeconds: number,
 ): { newPrice: number; updatedVolatility: number } => {
   let vol = (Math.random() - 0.5) * 0.01 + volatility;
   if (vol < 0.02) vol = 0.02;
   else if (vol > 0.2) vol = 0.2;
 
-  const randomChange = ((Math.random() - 0.5) * vol) * currentPrice;
-  const shortMomentum = Math.sin(nowSeconds * (2 * Math.PI) / SHORT_MOMENTUM_WAVE_PERIOD);
-  const shortMomentumBias = shortMomentum * SHORT_MOMENTUM_MAGNITUDE * currentPrice;
-  const longMomentum = Math.sin(nowSeconds * (2 * Math.PI) / LONG_MOMENTUM_WAVE_PERIOD);
-  const longMomentumBias = longMomentum * LONG_MOMENTUM_MAGNITUDE * currentPrice;
+  const randomChange = (Math.random() - 0.5) * vol * currentPrice;
+  const shortMomentum = Math.sin(
+    (nowSeconds * (2 * Math.PI)) / SHORT_MOMENTUM_WAVE_PERIOD,
+  );
+  const shortMomentumBias =
+    shortMomentum * SHORT_MOMENTUM_MAGNITUDE * currentPrice;
+  const longMomentum = Math.sin(
+    (nowSeconds * (2 * Math.PI)) / LONG_MOMENTUM_WAVE_PERIOD,
+  );
+  const longMomentumBias =
+    longMomentum * LONG_MOMENTUM_MAGNITUDE * currentPrice;
   const totalChange = randomChange + shortMomentumBias + longMomentumBias;
   const newPrice = Math.max(0.01, currentPrice + totalChange);
 
@@ -69,7 +81,10 @@ export const calculateNextPrice = (
  * @param period The period for the SMA calculation.
  * @returns An array containing SMA values, with nulls at the beginning.
  */
-export const calculateSMA = (data: number[], period: number): (number | null)[] => {
+export const calculateSMA = (
+  data: number[],
+  period: number,
+): (number | null)[] => {
   if (period <= 0 || data.length < period) {
     // Return array of nulls if period is invalid or data is too short
     return Array(data.length).fill(null);
@@ -87,13 +102,12 @@ export const calculateSMA = (data: number[], period: number): (number | null)[] 
   // Calculate subsequent SMA points efficiently
   for (let i = period; i < data.length; i++) {
     sum -= data[i - period]; // Subtract the oldest value from the window
-    sum += data[i];         // Add the newest value to the window
+    sum += data[i]; // Add the newest value to the window
     sma.push(sum / period);
   }
 
   return sma;
 };
-
 
 /**
  * Creates an SVG path string for a simple line chart from numeric data points.
@@ -113,14 +127,14 @@ export const generateSvgPath = (
   height: number,
   dataMin: number,
   dataMax: number,
-  totalPoints: number
+  totalPoints: number,
 ): string => {
-  if (totalPoints < 2) return '';
+  if (totalPoints < 2) return "";
 
   // convert to logarithmic form
-  data = data.map(i => typeof(i) == 'number' ? Math.log10(i+1) : null);
-  dataMax = Math.log10(dataMax+1);
-  dataMin = Math.log10(dataMin+1);
+  data = data.map((i) => (typeof i == "number" ? Math.log10(i + 1) : null));
+  dataMax = Math.log10(dataMax + 1);
+  dataMin = Math.log10(dataMin + 1);
 
   const dataRange = dataMax - dataMin === 0 ? 1 : dataMax - dataMin; // Avoid division by zero
   const padding = 10; // 10px padding
@@ -139,7 +153,9 @@ export const generateSvgPath = (
       const x = (i / (totalPoints - 1)) * width;
 
       // Adjust y calculation for padding
-      const y = height - (padding + ((value - effectiveMin) / effectiveRange) * effectiveHeight);
+      const y =
+        height -
+        (padding + ((value - effectiveMin) / effectiveRange) * effectiveHeight);
       // Ensure y is within bounds
       const clampedY = Math.max(0, Math.min(height, y));
       currentSegmentPoints.push(`${x.toFixed(2)},${clampedY.toFixed(2)}`);
@@ -148,11 +164,11 @@ export const generateSvgPath = (
       if (currentSegmentPoints.length > 0) {
         // Need at least 2 points for a line segment (M + L)
         if (currentSegmentPoints.length >= 2) {
-           pathSegments.push(`M ${currentSegmentPoints.join(' L ')}`);
+          pathSegments.push(`M ${currentSegmentPoints.join(" L ")}`);
         } else {
-           // Handle single point segment if needed (e.g., draw a small circle)
-           // For a line chart, a single point doesn't draw anything, so we can just ignore it
-           // or add specific logic here if desired.
+          // Handle single point segment if needed (e.g., draw a small circle)
+          // For a line chart, a single point doesn't draw anything, so we can just ignore it
+          // or add specific logic here if desired.
         }
         currentSegmentPoints = []; // Start a new segment
       }
@@ -161,8 +177,8 @@ export const generateSvgPath = (
 
   // Add the last segment if it has points
   if (currentSegmentPoints.length >= 2) {
-    pathSegments.push(`M ${currentSegmentPoints.join(' L ')}`);
+    pathSegments.push(`M ${currentSegmentPoints.join(" L ")}`);
   }
 
-  return pathSegments.join(' '); // Join segments (each starts with M)
+  return pathSegments.join(" "); // Join segments (each starts with M)
 };

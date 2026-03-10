@@ -1,13 +1,18 @@
-import { useState, useEffect, useCallback } from 'react';
-import PaymentAnimation from './components/PaymentAnimation';
-import Wallet from './components/Wallet';
-import PriceDisplay from './components/PriceDisplay';
-import SwapUI from './components/SwapUI';
-import PriceChart from './components/PriceChart';
-import { Coins } from 'lucide-react';
-import { generateInitialPriceHistory, calculateNextPrice, PRICE_HISTORY_LENGTH, PRICE_UPDATE_INTERVAL } from './lib/chart';
+import { useState, useEffect, useCallback } from "react";
+import PaymentAnimation from "./components/PaymentAnimation";
+import Wallet from "./components/Wallet";
+import PriceDisplay from "./components/PriceDisplay";
+import SwapUI from "./components/SwapUI";
+import PriceChart from "./components/PriceChart";
+import { Coins } from "lucide-react";
+import {
+  generateInitialPriceHistory,
+  calculateNextPrice,
+  PRICE_HISTORY_LENGTH,
+  PRICE_UPDATE_INTERVAL,
+} from "./lib/chart";
 
-type Currency = '$HIT' | 'fAuxUSD' | 'i$HIT';
+type Currency = "$HIT" | "fAuxUSD" | "i$HIT";
 
 interface WalletState {
   $HIT: number;
@@ -18,11 +23,15 @@ interface WalletState {
 const INITIAL_PRICE = 420.69;
 const INITIAL_VOLATILITY = 0.08;
 
-let intervalId: number|undefined = undefined;
+let intervalId: number | undefined = undefined;
 
 function App() {
   const [showAnimation, setShowAnimation] = useState(true);
-  const [wallet, setWallet] = useState<WalletState>({ $HIT: 0.0069, fAuxUSD: 420, i$HIT: 0.0069 });
+  const [wallet, setWallet] = useState<WalletState>({
+    $HIT: 0.0069,
+    fAuxUSD: 420,
+    i$HIT: 0.0069,
+  });
   const [currentPrice, setCurrentPrice] = useState<number>(INITIAL_PRICE);
   const [previousPrice, setPreviousPrice] = useState<number | null>(null);
   const [priceHistory, setPriceHistory] = useState<number[]>([]);
@@ -30,10 +39,15 @@ function App() {
 
   // Generate initial price history ONCE on mount.
   useEffect(() => {
-    const initialHistory = generateInitialPriceHistory(INITIAL_PRICE, PRICE_HISTORY_LENGTH, INITIAL_VOLATILITY);
+    const initialHistory = generateInitialPriceHistory(
+      INITIAL_PRICE,
+      PRICE_HISTORY_LENGTH,
+      INITIAL_VOLATILITY,
+    );
     setPriceHistory(initialHistory);
     const lastGeneratedPrice = initialHistory[initialHistory.length - 1];
-    const secondLastGeneratedPrice = initialHistory[initialHistory.length - 2] ?? lastGeneratedPrice;
+    const secondLastGeneratedPrice =
+      initialHistory[initialHistory.length - 2] ?? lastGeneratedPrice;
     setCurrentPrice(lastGeneratedPrice);
     setPreviousPrice(secondLastGeneratedPrice);
   }, []);
@@ -73,12 +87,16 @@ function App() {
 
     intervalId = setInterval(() => {
       const nowSeconds = Date.now() / 1000;
-      setCurrentPrice(prevCurrentPrice => {
+      setCurrentPrice((prevCurrentPrice) => {
         setPreviousPrice(prevCurrentPrice);
-        const { newPrice, updatedVolatility } = calculateNextPrice(prevCurrentPrice, volatility, nowSeconds);
+        const { newPrice, updatedVolatility } = calculateNextPrice(
+          prevCurrentPrice,
+          volatility,
+          nowSeconds,
+        );
         setVolatility(updatedVolatility);
 
-        setPriceHistory(prevHistory => {
+        setPriceHistory((prevHistory) => {
           const updatedHistory = [...prevHistory, newPrice];
           return updatedHistory.slice(-PRICE_HISTORY_LENGTH);
         });
@@ -93,74 +111,77 @@ function App() {
   //   clearInterval(intervalId);
   // };
 
-  const handleSwap = useCallback((fromCurrency: Currency, toCurrency: Currency, amount: number) => {
-    setWallet(prevWallet => {
-      const newWallet = { ...prevWallet };
-      let amountToReceive: number;
-      const priceForSwap = currentPrice;
+  const handleSwap = useCallback(
+    (fromCurrency: Currency, toCurrency: Currency, amount: number) => {
+      setWallet((prevWallet) => {
+        const newWallet = { ...prevWallet };
+        let amountToReceive: number;
+        const priceForSwap = currentPrice;
 
-      if (fromCurrency === '$HIT' && toCurrency === 'fAuxUSD') {
-        amountToReceive = amount * priceForSwap;
-        if (amount > prevWallet.$HIT) {
-          console.warn("Attempted to sell more $HIT than available.");
+        if (fromCurrency === "$HIT" && toCurrency === "fAuxUSD") {
+          amountToReceive = amount * priceForSwap;
+          if (amount > prevWallet.$HIT) {
+            console.warn("Attempted to sell more $HIT than available.");
+            return prevWallet;
+          }
+          newWallet.$HIT -= amount;
+          newWallet.fAuxUSD += amountToReceive;
+        } else if (fromCurrency === "fAuxUSD" && toCurrency === "$HIT") {
+          amountToReceive = amount / priceForSwap;
+          if (amount > prevWallet.fAuxUSD) {
+            console.warn("Attempted to spend more fAuxUSD than available.");
+            return prevWallet;
+          }
+          newWallet.fAuxUSD -= amount;
+          newWallet.$HIT += amountToReceive;
+        } else if (fromCurrency === "fAuxUSD" && toCurrency === "i$HIT") {
+          amountToReceive = amount * priceForSwap;
+          if (amount > prevWallet.fAuxUSD) {
+            console.warn("Attempted to spend more fAuxUSD than available.");
+            return prevWallet;
+          }
+          newWallet.fAuxUSD -= amount;
+          newWallet.i$HIT += amountToReceive;
+        } else if (fromCurrency === "i$HIT" && toCurrency === "fAuxUSD") {
+          amountToReceive = amount / priceForSwap;
+          if (amount > prevWallet.i$HIT) {
+            console.warn("Attempted to sell more i$HIT than available.");
+            return prevWallet;
+          }
+          newWallet.i$HIT -= amount;
+          newWallet.fAuxUSD += amountToReceive;
+        } else if (fromCurrency === "$HIT" && toCurrency === "i$HIT") {
+          amountToReceive = amount * priceForSwap * priceForSwap;
+          if (amount > prevWallet.$HIT) {
+            console.warn("Attempted to sell more $HIT than available.");
+            return prevWallet;
+          }
+          newWallet.$HIT -= amount;
+          newWallet.i$HIT += amountToReceive;
+        } else if (fromCurrency === "i$HIT" && toCurrency === "$HIT") {
+          amountToReceive = amount / (priceForSwap * priceForSwap);
+          if (amount > prevWallet.i$HIT) {
+            console.warn("Attempted to sell more i$HIT than available.");
+            return prevWallet;
+          }
+          newWallet.i$HIT -= amount;
+          newWallet.$HIT += amountToReceive;
+        } else {
+          console.error("Invalid swap pair");
           return prevWallet;
         }
-        newWallet.$HIT -= amount;
-        newWallet.fAuxUSD += amountToReceive;
-      } else if (fromCurrency === 'fAuxUSD' && toCurrency === '$HIT') {
-        amountToReceive = amount / priceForSwap;
-        if (amount > prevWallet.fAuxUSD) {
-          console.warn("Attempted to spend more fAuxUSD than available.");
-          return prevWallet;
-        }
-        newWallet.fAuxUSD -= amount;
-        newWallet.$HIT += amountToReceive;
-      } else if (fromCurrency === 'fAuxUSD' && toCurrency === 'i$HIT') {
-        amountToReceive = amount * priceForSwap;
-        if (amount > prevWallet.fAuxUSD) {
-          console.warn("Attempted to spend more fAuxUSD than available.");
-          return prevWallet;
-        }
-        newWallet.fAuxUSD -= amount;
-        newWallet.i$HIT += amountToReceive;
-      } else if (fromCurrency === 'i$HIT' && toCurrency === 'fAuxUSD') {
-        amountToReceive = amount / priceForSwap;
-        if (amount > prevWallet.i$HIT) {
-          console.warn("Attempted to sell more i$HIT than available.");
-          return prevWallet;
-        }
-        newWallet.i$HIT -= amount;
-        newWallet.fAuxUSD += amountToReceive;
-      } else if (fromCurrency === '$HIT' && toCurrency === 'i$HIT') {
-        amountToReceive = amount * priceForSwap * priceForSwap;
-        if (amount > prevWallet.$HIT) {
-          console.warn("Attempted to sell more $HIT than available.");
-          return prevWallet;
-        }
-        newWallet.$HIT -= amount;
-        newWallet.i$HIT += amountToReceive;
-      } else if (fromCurrency === 'i$HIT' && toCurrency === '$HIT') {
-        amountToReceive = amount / (priceForSwap * priceForSwap);
-        if (amount > prevWallet.i$HIT) {
-          console.warn("Attempted to sell more i$HIT than available.");
-          return prevWallet;
-        }
-        newWallet.i$HIT -= amount;
-        newWallet.$HIT += amountToReceive;
-      } else {
-        console.error("Invalid swap pair");
-        return prevWallet;
-      }
-      newWallet.$HIT = Math.max(0, newWallet.$HIT);
-      newWallet.fAuxUSD = Math.max(0, newWallet.fAuxUSD);
-      newWallet.i$HIT = Math.max(0, newWallet.i$HIT);
-      return newWallet;
-    });
-  }, [currentPrice]);
+        newWallet.$HIT = Math.max(0, newWallet.$HIT);
+        newWallet.fAuxUSD = Math.max(0, newWallet.fAuxUSD);
+        newWallet.i$HIT = Math.max(0, newWallet.i$HIT);
+        return newWallet;
+      });
+    },
+    [currentPrice],
+  );
 
   // New callback for staking — updates wallet balances using the provided multiplier.
   const handleStake = useCallback((multiplier: number) => {
-    setWallet(prevWallet => ({
+    setWallet((prevWallet) => ({
       $HIT: prevWallet.$HIT * multiplier,
       fAuxUSD: prevWallet.fAuxUSD * multiplier,
       i$HIT: prevWallet.i$HIT * multiplier,
@@ -180,7 +201,9 @@ function App() {
             $HIT Coin Trader Pro
           </h1>
         </div>
-        <p className="text-lg text-gray-600">The totally not sketchy platform for trading $HIT coins.</p>
+        <p className="text-lg text-gray-600">
+          The totally not sketchy platform for trading $HIT coins.
+        </p>
       </header>
 
       <main className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -218,7 +241,11 @@ function App() {
       <footer className="text-center mt-12 text-gray-500 text-sm">
         <p>Disclaimer: prices are made up.</p>
         <p>Exchange may collapse at our sole discretion.</p>
-        <a className="text-gray-200" target="_blank" href="https://github.com/k98kurz/shitcoin.pycelium.com">
+        <a
+          className="text-gray-200"
+          target="_blank"
+          href="https://github.com/k98kurz/shitcoin.pycelium.com"
+        >
           Source Code
         </a>
       </footer>

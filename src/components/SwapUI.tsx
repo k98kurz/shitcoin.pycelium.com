@@ -1,15 +1,19 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { ArrowRightLeft } from 'lucide-react';
-import { calculateSMA } from '../lib/chart';
+import React, { useState, useEffect, useRef } from "react";
+import { ArrowRightLeft } from "lucide-react";
+import { calculateSMA } from "../lib/chart";
 
-type Currency = '$HIT' | 'fAuxUSD' | 'i$HIT';
+type Currency = "$HIT" | "fAuxUSD" | "i$HIT";
 
 interface SwapUIProps {
   $hitBalance: number;
   fAuxUSDBalance: number;
   i$hitBalance: number;
   currentPrice: number; // Price of 1 HIT in fAuxUSD
-  onSwap: (fromCurrency: Currency, toCurrency: Currency, amount: number) => void;
+  onSwap: (
+    fromCurrency: Currency,
+    toCurrency: Currency,
+    amount: number,
+  ) => void;
   onStake: (multiplier: number) => void; // New onStake callback for staking bonus/penalty
   priceHistory: number[];
 }
@@ -30,23 +34,31 @@ const SwapUI: React.FC<SwapUIProps> = ({
   onStake,
   priceHistory,
 }) => {
-  const [fromCurrency, setFromCurrency] = useState<Currency>('fAuxUSD');
-  const [toCurrency, setToCurrency] = useState<Currency>('$HIT');
-  const [fromAmount, setFromAmount] = useState<string>('');
-  const [toAmount, setToAmount] = useState<string>('');
+  const [fromCurrency, setFromCurrency] = useState<Currency>("fAuxUSD");
+  const [toCurrency, setToCurrency] = useState<Currency>("$HIT");
+  const [fromAmount, setFromAmount] = useState<string>("");
+  const [toAmount, setToAmount] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
 
   const getBalance = (currency: Currency): number => {
     switch (currency) {
-      case '$HIT': return $hitBalance;
-      case 'fAuxUSD': return fAuxUSDBalance;
-      case 'i$HIT': return i$hitBalance;
+      case "$HIT":
+        return $hitBalance;
+      case "fAuxUSD":
+        return fAuxUSDBalance;
+      case "i$HIT":
+        return i$hitBalance;
     }
   };
 
-  const toggleCurrency = (currency: Currency, otherSideCurrency: Currency): Currency => {
-    const allCurrencies: Currency[] = ['$HIT', 'fAuxUSD', 'i$HIT'];
-    const availableCurrencies = allCurrencies.filter(c => c !== currency && c !== otherSideCurrency);
+  const toggleCurrency = (
+    currency: Currency,
+    otherSideCurrency: Currency,
+  ): Currency => {
+    const allCurrencies: Currency[] = ["$HIT", "fAuxUSD", "i$HIT"];
+    const availableCurrencies = allCurrencies.filter(
+      (c) => c !== currency && c !== otherSideCurrency,
+    );
     return availableCurrencies[0];
   };
 
@@ -61,46 +73,46 @@ const SwapUI: React.FC<SwapUIProps> = ({
   const [autoSwapPercentage, setAutoSwapPercentage] = useState<number>(10);
   const [autoSwapIHITEnabled, setAutoSwapIHITEnabled] = useState<boolean>(true);
 
-  const handleAmountChange = (value: string, type: 'from' | 'to') => {
+  const handleAmountChange = (value: string, type: "from" | "to") => {
     const numericValue = parseFloat(value);
     setError(null); // Clear error on input change
 
     // Allow empty string or positive numbers
-    if (value === '') {
-      setFromAmount('');
-      setToAmount('');
+    if (value === "") {
+      setFromAmount("");
+      setToAmount("");
       return;
     }
 
     // Check for invalid characters or negative numbers after checking for empty
     if (isNaN(numericValue) || numericValue < 0) {
-      if (type === 'from') setFromAmount(value);
+      if (type === "from") setFromAmount(value);
       else setToAmount(value);
       setError("Please enter a valid positive number");
       // Clear the other field if the current one is invalid
-      if (type === 'from') setToAmount('');
-      else setFromAmount('');
+      if (type === "from") setToAmount("");
+      else setFromAmount("");
       return;
     }
 
     const getPrecision = (currency: Currency): number => {
-      return currency === 'fAuxUSD' ? 2 : 8;
+      return currency === "fAuxUSD" ? 2 : 8;
     };
 
-    if (type === 'from') {
+    if (type === "from") {
       setFromAmount(value);
       let result: number;
-      if (fromCurrency === 'fAuxUSD' && toCurrency === '$HIT') {
+      if (fromCurrency === "fAuxUSD" && toCurrency === "$HIT") {
         result = numericValue / currentPrice;
-      } else if (fromCurrency === 'fAuxUSD' && toCurrency === 'i$HIT') {
+      } else if (fromCurrency === "fAuxUSD" && toCurrency === "i$HIT") {
         result = numericValue * currentPrice;
-      } else if (fromCurrency === '$HIT' && toCurrency === 'fAuxUSD') {
+      } else if (fromCurrency === "$HIT" && toCurrency === "fAuxUSD") {
         result = numericValue * currentPrice;
-      } else if (fromCurrency === '$HIT' && toCurrency === 'i$HIT') {
+      } else if (fromCurrency === "$HIT" && toCurrency === "i$HIT") {
         result = numericValue * currentPrice * currentPrice;
-      } else if (fromCurrency === 'i$HIT' && toCurrency === 'fAuxUSD') {
+      } else if (fromCurrency === "i$HIT" && toCurrency === "fAuxUSD") {
         result = numericValue / currentPrice;
-      } else if (fromCurrency === 'i$HIT' && toCurrency === '$HIT') {
+      } else if (fromCurrency === "i$HIT" && toCurrency === "$HIT") {
         result = numericValue / (currentPrice * currentPrice);
       } else {
         result = 0;
@@ -110,17 +122,17 @@ const SwapUI: React.FC<SwapUIProps> = ({
       // type === 'to'
       setToAmount(value);
       let result: number;
-      if (toCurrency === 'fAuxUSD' && fromCurrency === '$HIT') {
+      if (toCurrency === "fAuxUSD" && fromCurrency === "$HIT") {
         result = numericValue / currentPrice;
-      } else if (toCurrency === 'fAuxUSD' && fromCurrency === 'i$HIT') {
+      } else if (toCurrency === "fAuxUSD" && fromCurrency === "i$HIT") {
         result = numericValue * currentPrice;
-      } else if (toCurrency === '$HIT' && fromCurrency === 'fAuxUSD') {
+      } else if (toCurrency === "$HIT" && fromCurrency === "fAuxUSD") {
         result = numericValue * currentPrice;
-      } else if (toCurrency === '$HIT' && fromCurrency === 'i$HIT') {
+      } else if (toCurrency === "$HIT" && fromCurrency === "i$HIT") {
         result = numericValue / (currentPrice * currentPrice);
-      } else if (toCurrency === 'i$HIT' && fromCurrency === 'fAuxUSD') {
+      } else if (toCurrency === "i$HIT" && fromCurrency === "fAuxUSD") {
         result = numericValue / currentPrice;
-      } else if (toCurrency === 'i$HIT' && fromCurrency === '$HIT') {
+      } else if (toCurrency === "i$HIT" && fromCurrency === "$HIT") {
         result = numericValue * currentPrice * currentPrice;
       } else {
         result = 0;
@@ -132,8 +144,8 @@ const SwapUI: React.FC<SwapUIProps> = ({
   const switchCurrencies = () => {
     setFromCurrency(toCurrency);
     setToCurrency(fromCurrency);
-    setToAmount('');
-    setFromAmount('');
+    setToAmount("");
+    setFromAmount("");
   };
 
   const handleSwap = () => {
@@ -153,35 +165,47 @@ const SwapUI: React.FC<SwapUIProps> = ({
     onSwap(fromCurrency, toCurrency, amount);
     // Clear inputs after successful swap if the user hit the max button
     if (amount + 1e-9 >= balance || balance - amount <= 1e-6) {
-      setFromAmount('');
-      setToAmount('');
-    } else if (amount > (balance - amount)) {
-      setFromAmount((balance - amount).toFixed(fromCurrency === 'fAuxUSD' ? 2 : 8));
-      setToAmount('');
+      setFromAmount("");
+      setToAmount("");
+    } else if (amount > balance - amount) {
+      setFromAmount(
+        (balance - amount).toFixed(fromCurrency === "fAuxUSD" ? 2 : 8),
+      );
+      setToAmount("");
     }
   };
 
   // Recalculate 'toAmount' if price changes while amounts are entered
   useEffect(() => {
-    if (fromAmount !== '' && !isNaN(parseFloat(fromAmount)) && parseFloat(fromAmount) >= 0) {
-      handleAmountChange(fromAmount, 'from');
-    } else if (fromAmount !== '' && (isNaN(parseFloat(fromAmount)) || parseFloat(fromAmount) < 0)) {
-      setToAmount('');
+    if (
+      fromAmount !== "" &&
+      !isNaN(parseFloat(fromAmount)) &&
+      parseFloat(fromAmount) >= 0
+    ) {
+      handleAmountChange(fromAmount, "from");
+    } else if (
+      fromAmount !== "" &&
+      (isNaN(parseFloat(fromAmount)) || parseFloat(fromAmount) < 0)
+    ) {
+      setToAmount("");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPrice, fromCurrency, toCurrency]);
 
   const handleMaxClick = () => {
     const balance = getBalance(fromCurrency);
-    const precision = fromCurrency === 'fAuxUSD' ? 2 : 8;
+    const precision = fromCurrency === "fAuxUSD" ? 2 : 8;
     const formattedBalance = balance.toFixed(precision);
-    handleAmountChange(formattedBalance, 'from');
+    handleAmountChange(formattedBalance, "from");
   };
 
   const handleAmountClick = (percentage: number) => {
     const balance = getBalance(fromCurrency);
     const amount = balance * percentage;
-    handleAmountChange(amount.toFixed(fromCurrency === 'fAuxUSD' ? 2 : 8), 'from');
+    handleAmountChange(
+      amount.toFixed(fromCurrency === "fAuxUSD" ? 2 : 8),
+      "from",
+    );
   };
 
   // --- New staking functionality ---
@@ -190,8 +214,8 @@ const SwapUI: React.FC<SwapUIProps> = ({
     if (stakeLockRemaining > 0) return;
 
     // Clear the amount fields when staking starts
-    setFromAmount('');
-    setToAmount('');
+    setFromAmount("");
+    setToAmount("");
 
     const roll = Math.random();
     if (roll < 0.1) {
@@ -200,14 +224,15 @@ const SwapUI: React.FC<SwapUIProps> = ({
         "Validator node failed. Stake slashed!",
         "Coins lost to MEV attack!",
         "DeFi contract hack!",
-        "Dex owner rug pulled!"
+        "Dex owner rug pulled!",
       ];
-      const chosenError = errorMessages[Math.floor(Math.random() * errorMessages.length)];
+      const chosenError =
+        errorMessages[Math.floor(Math.random() * errorMessages.length)];
       const outcome: StakeOutcome = {
         bonusMultiplier: 0.5, // wallet balances will be halved
         isFailure: true,
         lockDuration: 10,
-        errorMessage: chosenError
+        errorMessage: chosenError,
       };
       setStakeOutcome(outcome);
       setStakeLockRemaining(outcome.lockDuration);
@@ -216,12 +241,12 @@ const SwapUI: React.FC<SwapUIProps> = ({
       const outcomes = [
         { bonusMultiplier: 1.05, lockDuration: 10 },
         { bonusMultiplier: 1.2, lockDuration: 30 },
-        { bonusMultiplier: 1.5, lockDuration: 60 }
+        { bonusMultiplier: 1.5, lockDuration: 60 },
       ];
       const chosen = outcomes[Math.floor(Math.random() * outcomes.length)];
       const outcome: StakeOutcome = {
         ...chosen,
-        isFailure: false
+        isFailure: false,
       };
       setStakeOutcome(outcome);
       setStakeLockRemaining(outcome.lockDuration);
@@ -232,7 +257,7 @@ const SwapUI: React.FC<SwapUIProps> = ({
   useEffect(() => {
     if (stakeOutcome !== null) {
       const timer = setInterval(() => {
-        setStakeLockRemaining(prev => {
+        setStakeLockRemaining((prev) => {
           if (prev <= 1) {
             clearInterval(timer);
             return 0;
@@ -351,19 +376,19 @@ const SwapUI: React.FC<SwapUIProps> = ({
           // Multi-leg swap: i$HIT → fAuxUSD → $HIT
           const firstAmount = i$hitBalanceRef.current * proportion;
           if (firstAmount > 0) {
-            onSwapRef.current('i$HIT', 'fAuxUSD', firstAmount);
+            onSwapRef.current("i$HIT", "fAuxUSD", firstAmount);
           }
           // Second leg uses the same proportion applied to the new fAuxUSD balance
           // Note: This will use the updated balance after the first swap
           const secondAmount = fAuxUSDBalanceRef.current * proportion;
           if (secondAmount > 0) {
-            onSwapRef.current('fAuxUSD', '$HIT', secondAmount);
+            onSwapRef.current("fAuxUSD", "$HIT", secondAmount);
           }
         } else {
           // Original behavior: fAuxUSD → $HIT
           const amount = fAuxUSDBalanceRef.current * proportion;
           if (amount > 0) {
-            onSwapRef.current('fAuxUSD', '$HIT', amount);
+            onSwapRef.current("fAuxUSD", "$HIT", amount);
           }
         }
       } else if (currentPriceRef.current < lastSma) {
@@ -372,19 +397,19 @@ const SwapUI: React.FC<SwapUIProps> = ({
           // Multi-leg swap: $HIT → fAuxUSD → i$HIT
           const firstAmount = $hitBalanceRef.current * proportion;
           if (firstAmount > 0) {
-            onSwapRef.current('$HIT', 'fAuxUSD', firstAmount);
+            onSwapRef.current("$HIT", "fAuxUSD", firstAmount);
           }
           // Second leg uses the same proportion applied to the new fAuxUSD balance
           // Note: This will use the updated balance after the first swap
           const secondAmount = fAuxUSDBalanceRef.current * proportion;
           if (secondAmount > 0) {
-            onSwapRef.current('fAuxUSD', 'i$HIT', secondAmount);
+            onSwapRef.current("fAuxUSD", "i$HIT", secondAmount);
           }
         } else {
           // Original behavior: $HIT → fAuxUSD
           const amount = $hitBalanceRef.current * proportion;
           if (amount > 0) {
-            onSwapRef.current('$HIT', 'fAuxUSD', amount);
+            onSwapRef.current("$HIT", "fAuxUSD", amount);
           }
         }
       }
@@ -408,7 +433,9 @@ const SwapUI: React.FC<SwapUIProps> = ({
           </div>
         </div>
       )}
-      <h2 className="text-xl font-semibold mb-4 text-gray-700">Swap or Stake Coins</h2>
+      <h2 className="text-xl font-semibold mb-4 text-gray-700">
+        Swap or Stake Coins
+      </h2>
       {error && <p className="text-red-500 text-sm mb-3">{error}</p>}
       <div className="space-y-4">
         {/* Auto stake and auto swap checkboxes */}
@@ -420,7 +447,9 @@ const SwapUI: React.FC<SwapUIProps> = ({
             checked={autoStakeEnabled}
             onChange={(e) => setAutoStakeEnabled(e.target.checked)}
           />
-          <label htmlFor="autoStake" className="text-sm text-gray-700">Auto stake</label>
+          <label htmlFor="autoStake" className="text-sm text-gray-700">
+            Auto stake
+          </label>
           <input
             type="checkbox"
             id="autoSwap"
@@ -428,12 +457,17 @@ const SwapUI: React.FC<SwapUIProps> = ({
             checked={autoSwapEnabled}
             onChange={(e) => setAutoSwapEnabled(e.target.checked)}
           />
-          <label htmlFor="autoSwap" className="text-sm text-gray-700">Auto swap</label>
+          <label htmlFor="autoSwap" className="text-sm text-gray-700">
+            Auto swap
+          </label>
         </div>
         {/* Slider for autoSwap percentage (visible only when Auto swap is enabled) */}
         {autoSwapEnabled && (
           <div className="mt-2 w-full">
-            <label htmlFor="autoSwapPercentage" className="text-sm text-gray-700">
+            <label
+              htmlFor="autoSwapPercentage"
+              className="text-sm text-gray-700"
+            >
               Auto swap percentage: {autoSwapPercentage}%
             </label>
             <input
@@ -464,14 +498,19 @@ const SwapUI: React.FC<SwapUIProps> = ({
           </div>
         )}
 
-        {!autoSwapEnabled &&
+        {!autoSwapEnabled && (
           <>
             {/* From Currency Input */}
             <div>
-              <label htmlFor="fromAmount" className="block text-sm font-medium text-gray-500 mb-1">
+              <label
+                htmlFor="fromAmount"
+                className="block text-sm font-medium text-gray-500 mb-1"
+              >
                 Spend (
                 <span
-                  onClick={() => setFromCurrency(toggleCurrency(fromCurrency, toCurrency))}
+                  onClick={() =>
+                    setFromCurrency(toggleCurrency(fromCurrency, toCurrency))
+                  }
                   className="text-indigo-600 hover:text-indigo-800 cursor-pointer font-semibold"
                 >
                   {fromCurrency}
@@ -482,7 +521,7 @@ const SwapUI: React.FC<SwapUIProps> = ({
                 type="number"
                 id="fromAmount"
                 value={fromAmount}
-                onChange={(e) => handleAmountChange(e.target.value, 'from')}
+                onChange={(e) => handleAmountChange(e.target.value, "from")}
                 placeholder="0.00"
                 min="0"
                 step="any"
@@ -490,21 +529,27 @@ const SwapUI: React.FC<SwapUIProps> = ({
                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
               />
               <p className="text-xs text-gray-500 mt-1">
-                Balance:{' '}
+                Balance:{" "}
                 <button
                   onClick={handleMaxClick}
                   className="text-indigo-600 hover:text-indigo-800 focus:outline-none underline disabled:text-gray-400 disabled:no-underline disabled:cursor-not-allowed"
                   title={`Use max ${fromCurrency} balance`}
-                  disabled={getBalance(fromCurrency) <= 1e-9 || stakeLockRemaining > 0}
+                  disabled={
+                    getBalance(fromCurrency) <= 1e-9 || stakeLockRemaining > 0
+                  }
                 >
-                  {getBalance(fromCurrency).toFixed(fromCurrency === 'fAuxUSD' ? 2 : 4)}
+                  {getBalance(fromCurrency).toFixed(
+                    fromCurrency === "fAuxUSD" ? 2 : 4,
+                  )}
                 </button>
                 &nbsp;&nbsp;&nbsp;(
                 <button
                   onClick={() => handleAmountClick(0.5)}
                   className="text-indigo-600 hover:text-indigo-800 focus:outline-none underline disabled:text-gray-400 disabled:no-underline disabled:cursor-not-allowed"
                   title="Use 50% of balance"
-                  disabled={getBalance(fromCurrency) <= 1e-9 || stakeLockRemaining > 0}
+                  disabled={
+                    getBalance(fromCurrency) <= 1e-9 || stakeLockRemaining > 0
+                  }
                 >
                   50%
                 </button>
@@ -513,7 +558,9 @@ const SwapUI: React.FC<SwapUIProps> = ({
                   onClick={() => handleAmountClick(0.25)}
                   className="text-indigo-600 hover:text-indigo-800 focus:outline-none underline disabled:text-gray-400 disabled:no-underline disabled:cursor-not-allowed"
                   title="Use 25% of balance"
-                  disabled={getBalance(fromCurrency) <= 1e-9 || stakeLockRemaining > 0}
+                  disabled={
+                    getBalance(fromCurrency) <= 1e-9 || stakeLockRemaining > 0
+                  }
                 >
                   25%
                 </button>
@@ -534,10 +581,15 @@ const SwapUI: React.FC<SwapUIProps> = ({
 
             {/* To Currency Input */}
             <div>
-              <label htmlFor="toAmount" className="block text-sm font-medium text-gray-500 mb-1">
+              <label
+                htmlFor="toAmount"
+                className="block text-sm font-medium text-gray-500 mb-1"
+              >
                 Receive (
                 <span
-                  onClick={() => setToCurrency(toggleCurrency(toCurrency, fromCurrency))}
+                  onClick={() =>
+                    setToCurrency(toggleCurrency(toCurrency, fromCurrency))
+                  }
                   className="text-indigo-600 hover:text-indigo-800 cursor-pointer font-semibold"
                 >
                   {toCurrency}
@@ -548,7 +600,7 @@ const SwapUI: React.FC<SwapUIProps> = ({
                 type="number"
                 id="toAmount"
                 value={toAmount}
-                onChange={(e) => handleAmountChange(e.target.value, 'to')}
+                onChange={(e) => handleAmountChange(e.target.value, "to")}
                 placeholder="0.00"
                 min="0"
                 step="any"
@@ -556,7 +608,10 @@ const SwapUI: React.FC<SwapUIProps> = ({
                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
               />
               <p className="text-xs text-gray-500 mt-1">
-                Balance: {getBalance(toCurrency).toFixed(toCurrency === 'fAuxUSD' ? 2 : 4)}
+                Balance:{" "}
+                {getBalance(toCurrency).toFixed(
+                  toCurrency === "fAuxUSD" ? 2 : 4,
+                )}
               </p>
             </div>
             <div className="flex flex-col items-center space-y-2">
@@ -579,11 +634,11 @@ const SwapUI: React.FC<SwapUIProps> = ({
               </button>
             </div>
           </>
-        }
+        )}
 
         <div className="flex flex-col items-center space-y-2">
           {/* Stake Coins Button */}
-          {!autoStakeEnabled &&
+          {!autoStakeEnabled && (
             <button
               onClick={handleStakeCoins}
               disabled={stakeLockRemaining > 0}
@@ -591,7 +646,7 @@ const SwapUI: React.FC<SwapUIProps> = ({
             >
               Stake Coins
             </button>
-          }
+          )}
           {/* Display the staking lock remaining message and expected rewards */}
           {stakeLockRemaining > 0 && stakeOutcome && (
             <div>
@@ -600,10 +655,13 @@ const SwapUI: React.FC<SwapUIProps> = ({
                 <span className="animate-cycle font-bold">
                   {stakeLockRemaining}
                 </span>{" "}
-                second{stakeLockRemaining === 1 ? '' : 's'} remaining
+                second{stakeLockRemaining === 1 ? "" : "s"} remaining
               </p>
               <p className="text-sm text-center text-gray-600">
-                Expected rewards: {stakeOutcome.isFailure ? '5%' : `${((stakeOutcome.bonusMultiplier - 1) * 100).toFixed(0)}%`}
+                Expected rewards:{" "}
+                {stakeOutcome.isFailure
+                  ? "5%"
+                  : `${((stakeOutcome.bonusMultiplier - 1) * 100).toFixed(0)}%`}
               </p>
             </div>
           )}

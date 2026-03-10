@@ -1,5 +1,5 @@
-import { useState, useRef, MouseEvent } from 'react';
-import { generateSvgPath, calculateSMA } from '../lib/chart';
+import { useState, useRef, MouseEvent } from "react";
+import { generateSvgPath, calculateSMA } from "../lib/chart";
 
 interface PriceChartProps {
   data: number[];
@@ -12,10 +12,10 @@ const PriceChart: React.FC<PriceChartProps> = ({
   data,
   width = 400,
   height = 200,
-  smaPeriod = 20
+  smaPeriod = 20,
 }) => {
-  const [legendMessage, setLegendMessage] = useState('');
-  const [legendClass, setLegendClass] = useState('');
+  const [legendMessage, setLegendMessage] = useState("");
+  const [legendClass, setLegendClass] = useState("");
   const [timeoutToClear, setTimeoutToClear] = useState(0);
   const svgRef = useRef<SVGSVGElement>(null);
 
@@ -33,19 +33,24 @@ const PriceChart: React.FC<PriceChartProps> = ({
 
     // get closest data point and make some calculations
     const closestPoint = data[dataX];
-    const difference = Math.round((data[data.length - 1] - closestPoint) / closestPoint * 10000) / 100;
-    setLegendClass(difference >= 0 ? 'text-blue-600' : 'text-red-600');
+    const difference =
+      Math.round(
+        ((data[data.length - 1] - closestPoint) / closestPoint) * 10000,
+      ) / 100;
+    setLegendClass(difference >= 0 ? "text-blue-600" : "text-red-600");
 
     // set message
-    setLegendMessage(`${closestPoint.toFixed(4)}; current price is ${difference >= 0 ? '+' : ''}${difference}% different`)
-  }
+    setLegendMessage(
+      `${closestPoint.toFixed(4)}; current price is ${difference >= 0 ? "+" : ""}${difference}% different`,
+    );
+  };
 
   const clearLegendMessage = () => {
     if (timeoutToClear) {
       clearTimeout(timeoutToClear);
     }
-    setTimeoutToClear(setTimeout(() => setLegendMessage(''), 2000));
-  }
+    setTimeoutToClear(setTimeout(() => setLegendMessage(""), 2000));
+  };
 
   // Ensure we have enough data points for meaningful display and SMA calculation
   const MIN_POINTS_FOR_SMA = Math.max(2, smaPeriod); // Need at least 2 points for a line, and `smaPeriod` for SMA
@@ -55,7 +60,9 @@ const PriceChart: React.FC<PriceChartProps> = ({
         className="bg-white p-6 rounded-lg shadow-md flex items-center justify-center text-gray-400"
         style={{ minHeight: `${height}px` }}
       >
-        {data.length < 2 ? 'Generating price history...' : `Need ${MIN_POINTS_FOR_SMA} data points for SMA...`}
+        {data.length < 2
+          ? "Generating price history..."
+          : `Need ${MIN_POINTS_FOR_SMA} data points for SMA...`}
       </div>
     );
   }
@@ -65,30 +72,48 @@ const PriceChart: React.FC<PriceChartProps> = ({
 
   // Determine overall min/max for consistent scaling across price and SMA
   // Filter out nulls from SMA data before finding min/max
-  const validSmaValues = smaData.filter(v => v !== null) as number[];
+  const validSmaValues = smaData.filter((v) => v !== null) as number[];
   // Ensure we don't try to spread an empty array if SMA calculation resulted in all nulls (unlikely with check above, but safe)
-  const allValues = [...data, ...(validSmaValues.length > 0 ? validSmaValues : [])];
+  const allValues = [
+    ...data,
+    ...(validSmaValues.length > 0 ? validSmaValues : []),
+  ];
   const dataMin = Math.min(...allValues);
   const dataMax = Math.max(...allValues);
 
   // Generate paths using the updated generateSvgPath function
-  const pricePathData = generateSvgPath(data, width, height, dataMin, dataMax, data.length);
-  const smaPathData = generateSvgPath(smaData, width, height, dataMin, dataMax, data.length);
-
+  const pricePathData = generateSvgPath(
+    data,
+    width,
+    height,
+    dataMin,
+    dataMax,
+    data.length,
+  );
+  const smaPathData = generateSvgPath(
+    smaData,
+    width,
+    height,
+    dataMin,
+    dataMax,
+    data.length,
+  );
 
   // Determine price line color based on SMA
   const lastPrice = data[data.length - 1];
   const lastSma = smaData[smaData.length - 1]; // Will be null if data.length < smaPeriod
 
-  let priceStrokeColor = 'stroke-red-500'; // Default to red (price < SMA or SMA not available)
+  let priceStrokeColor = "stroke-red-500"; // Default to red (price < SMA or SMA not available)
   if (lastSma !== null && lastPrice >= lastSma) {
-    priceStrokeColor = 'stroke-blue-500'; // Blue if price >= SMA
+    priceStrokeColor = "stroke-blue-500"; // Blue if price >= SMA
   }
   // Note: No fallback needed here, red is the default if lastSma is null.
 
   return (
     <div className="bg-white p-4 rounded-lg shadow-md overflow-hidden">
-      <h3 className="text-sm font-medium text-gray-500 mb-2">Price History (Last {data.length} points, log scale)</h3>
+      <h3 className="text-sm font-medium text-gray-500 mb-2">
+        Price History (Last {data.length} points, log scale)
+      </h3>
       <svg
         viewBox={`0 0 ${width} ${height}`}
         preserveAspectRatio="none" // Allows stretching
@@ -121,9 +146,7 @@ const PriceChart: React.FC<PriceChartProps> = ({
       {/* Legend at bottom of chart */}
       <div className="flex justify-end space-x-4 text-xs mt-2 px-2">
         <div className="flex items-center">
-          <span className={legendClass}>
-            {legendMessage}
-          </span>
+          <span className={legendClass}>{legendMessage}</span>
         </div>
         <div className="flex items-center">
           <span className="w-3 h-0.5 bg-blue-500 mr-1"></span> Price &gt;= SMA
@@ -132,7 +155,8 @@ const PriceChart: React.FC<PriceChartProps> = ({
           <span className="w-3 h-0.5 bg-red-500 mr-1"></span> Price &lt; SMA
         </div>
         <div className="flex items-center">
-          <span className="w-3 h-0.5 border-t border-dashed border-orange-400 opacity-70 mr-1"></span> SMA ({smaPeriod})
+          <span className="w-3 h-0.5 border-t border-dashed border-orange-400 opacity-70 mr-1"></span>{" "}
+          SMA ({smaPeriod})
         </div>
       </div>
     </div>
