@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { ArrowRightLeft } from "lucide-react";
 import { calculateSMA } from "../lib/chart";
 
@@ -212,7 +212,7 @@ const SwapUI: React.FC<SwapUIProps> = ({
   };
 
   // --- Staking functionality ---
-  const handleStakeCoins = () => {
+  const handleStakeCoins = useCallback(() => {
     // Do nothing if a stake is already in progress.
     if (stakeLockRemaining > 0) return;
 
@@ -254,7 +254,7 @@ const SwapUI: React.FC<SwapUIProps> = ({
       setStakeOutcome(outcome);
       setStakeLockRemaining(outcome.lockDuration);
     }
-  };
+  }, [stakeLockRemaining]);
 
   // Start a countdown (one interval per stake operation) when a stake is in progress.
   useEffect(() => {
