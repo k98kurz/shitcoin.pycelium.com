@@ -150,7 +150,7 @@ const Wallet: React.FC<WalletProps> = ({
         <div className="flex justify-between items-center">
           <span className="relative group cursor-help font-medium text-gray-600">
             i$HIT:
-            <span className="absolute w-80 left-1/2 top-full mt-2 -translate-x-1/2 bg-gray-800 text-white text-xs rounded py-1 px-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10 pointer-events-none">
+            <span className="absolute w-56 left-full ml-2 top-full mt-2 bg-gray-800 text-white text-xs rounded py-1 px-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10 pointer-events-none md:left-1/2 md:-translate-x-1/2 md:ml-0">
               Inverse $HIT token: 1 / ($HIT price)
             </span>
           </span>
